@@ -1,0 +1,1260 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex,nofollow"><style>:root{color-scheme:dark}html,body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style><title>Oreille Pop</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=DM+Sans:wght@400;500;700&display=swap">
+<style>
+/* Layout: one-column phone app, max 520px, path map + bottom tab bar. Deliberate single dark "night stage" look. */
+:root{
+  --bg:#121426; --surface:#1c1f38; --surface2:#262a4a; --line:#353a64;
+  --fg:#f3f1ff; --muted:#a3a7cc; --accent:#ff7a45; --accent2:#ffb38f;
+  --good:#3ddc97; --bad:#ff5c7a; --gold:#ffc94a;
+  --d1:#ff5c5c; --d2:#ff9f43; --d3:#ffd43b; --d4:#51cf66; --d5:#4dabf7; --d6:#9775fa; --d7:#f783ac;
+  --display:"Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --body:"DM Sans", system-ui, -apple-system, sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible,input:focus-visible{outline:3px solid var(--accent2);outline-offset:2px}
+#app{max-width:520px;margin:0 auto;min-height:100%;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 110px;position:relative}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:30px;font-weight:800;line-height:1.1}
+h2{font-size:22px;font-weight:800}
+h3{font-size:17px;font-weight:600}
+p{margin:0}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.stack{display:flex;flex-direction:column;gap:14px}
+.row{display:flex;gap:10px;align-items:center}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:54px;padding:0 20px;border-radius:16px;background:var(--accent);color:#1a0d06;font-weight:700;font-size:17px;box-shadow:0 5px 0 #c4501f;transition:transform .08s}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 #c4501f}
+.btn.ghost{background:var(--surface2);color:var(--fg);box-shadow:0 5px 0 #15172c}
+.btn.good{background:var(--good);color:#06291a;box-shadow:0 5px 0 #23a26c}
+.btn.bad{background:var(--bad);color:#2b0610;box-shadow:0 5px 0 #c03553}
+.btn:disabled{opacity:.45;cursor:default}
+.card{background:var(--surface);border-radius:20px;padding:18px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:var(--surface2);font-weight:700;font-size:14px;font-variant-numeric:tabular-nums}
+/* top bar */
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:8px;padding-block:6px 14px;position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:10}
+.flame{color:var(--accent)}
+/* tab bar */
+.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px);padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px));z-index:20}
+.tabs .in{display:flex;width:100%;max-width:520px}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 0 8px;font-size:12px;font-weight:700;color:var(--muted)}
+.tab[aria-current="true"]{color:var(--accent)}
+.tab svg{width:24px;height:24px}
+/* daily card */
+.daily{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center}
+.ring{width:82px;height:82px}
+/* path */
+.goalcard{background:linear-gradient(135deg,#2b2350,#1c1f38);border:1px solid var(--line)}
+.unit{margin-top:22px}
+.unithead{border-radius:18px;padding:14px 16px;color:#120f22}
+.unithead .eyebrow{color:rgba(18,15,34,.7)}
+.unithead h3{font-size:19px;font-weight:800}
+.path{display:flex;flex-direction:column;align-items:center;gap:14px;padding:20px 0 4px}
+.node{display:flex;flex-direction:column;align-items:center;gap:6px;width:200px;text-align:center}
+.bubble{width:70px;height:70px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:24px;color:#130f22;box-shadow:0 6px 0 rgba(0,0,0,.35);position:relative;transition:transform .1s}
+.bubble:active{transform:translateY(3px)}
+.bubble.locked{background:var(--surface2)!important;color:var(--muted);box-shadow:0 6px 0 #15172c}
+.bubble.current::after{content:"";position:absolute;inset:-9px;border-radius:50%;border:3px solid var(--accent);animation:pulse 1.6s infinite}
+@keyframes pulse{0%{opacity:1;transform:scale(.92)}100%{opacity:0;transform:scale(1.15)}}
+.node .lt{font-size:14px;font-weight:700;line-height:1.25}
+.stars{display:flex;gap:2px;height:16px}
+.stars svg{width:16px;height:16px}
+.final .bubble{width:92px;height:92px;background:var(--gold)}
+/* quiz */
+.qtop{display:flex;align-items:center;gap:12px;padding-block:8px 18px}
+.bar{flex:1;height:14px;background:var(--surface2);border-radius:99px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--good);border-radius:99px;transition:width .3s}
+.xbtn{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:var(--muted)}
+.prompt{text-align:center;display:flex;flex-direction:column;gap:6px;align-items:center}
+.playbig{width:120px;height:120px;border-radius:50%;background:var(--surface2);display:grid;place-items:center;margin:18px auto 8px;box-shadow:0 7px 0 #15172c;color:var(--accent)}
+.playbig:active{transform:translateY(4px);box-shadow:0 3px 0 #15172c}
+.playbig svg{width:52px;height:52px}
+.playing .playbig{animation:breathe 1s ease-in-out infinite}
+@keyframes breathe{50%{transform:scale(1.05)}}
+.answers{display:grid;gap:10px;margin-top:22px}
+.answers.deg{grid-template-columns:repeat(auto-fit,minmax(64px,1fr))}
+.answers.chd{grid-template-columns:repeat(auto-fit,minmax(92px,1fr))}
+.answers.list{grid-template-columns:1fr}
+.ans{min-height:70px;border-radius:16px;background:var(--surface);border:2px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:8px;box-shadow:0 4px 0 #15172c;transition:transform .08s}
+.ans:active{transform:translateY(3px);box-shadow:0 1px 0 #15172c}
+.ans b{font-family:var(--display);font-size:26px;line-height:1}
+.ans span{font-size:12px;color:var(--muted)}
+.ans.long{align-items:flex-start;text-align:left;padding:12px 16px}
+.ans.long b{font-size:19px}
+.slots{display:flex;gap:8px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+.slot{width:48px;height:56px;border-radius:12px;border:2px dashed var(--line);display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:20px}
+.slot.f{border-style:solid;color:#130f22}
+.slot.ok{outline:3px solid var(--good)} .slot.ko{outline:3px solid var(--bad)}
+/* feedback sheet */
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px);animation:up .22s ease-out}
+.sheet .in{width:100%;max-width:560px;border-radius:24px 24px 0 0;padding:20px max(18px,env(safe-area-inset-left,0px)) 20px max(18px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:12px;max-height:84vh;overflow-y:auto}
+.sheet.ok .in{background:#123a2e} .sheet.ko .in{background:#3d1624}
+.sheet h2{display:flex;align-items:center;gap:10px}
+.sheet.ok h2{color:var(--good)} .sheet.ko h2{color:var(--bad)}
+.sheet p{font-size:15.5px}
+.lbtns{display:flex;flex-wrap:wrap;gap:8px}
+.lbtn{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,.1);font-weight:700;font-size:14px}
+.lbtn svg{width:14px;height:14px}
+.chip{display:inline-flex;min-width:30px;height:30px;padding:0 8px;border-radius:9px;align-items:center;justify-content:center;font-weight:800;color:#130f22;font-family:var(--display)}
+.seqrow{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.ref{font-size:12.5px;color:var(--accent2)}
+@keyframes up{from{transform:translateY(40px);opacity:0}}
+/* result */
+.result{text-align:center;padding-top:30px}
+.bigstars{display:flex;justify-content:center;gap:10px;margin:18px 0}
+.bigstars svg{width:56px;height:56px;animation:pop .4s backwards}
+.bigstars svg:nth-child(2){animation-delay:.15s}.bigstars svg:nth-child(3){animation-delay:.3s}
+@keyframes pop{from{transform:scale(0)}}
+.statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:var(--surface);border-radius:16px;padding:12px;text-align:center}
+.stat b{display:block;font-family:var(--display);font-size:24px;font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--muted)}
+/* intro */
+.intro p{font-size:16px}
+.tip{background:var(--surface2);border-radius:14px;padding:12px 14px;font-size:14.5px}
+/* progress */
+.hbar{display:grid;grid-template-columns:44px 1fr 44px;gap:10px;align-items:center;font-size:14px;font-variant-numeric:tabular-nums}
+.hbar .t{height:12px;background:var(--surface2);border-radius:99px;overflow:hidden}
+.hbar .t i{display:block;height:100%;border-radius:99px}
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;align-items:end;height:120px}
+.week div{display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end;font-size:11px;color:var(--muted)}
+.week i{display:block;width:100%;border-radius:6px 6px 3px 3px;background:var(--surface2);min-height:4px}
+.week i.on{background:var(--accent)}
+.badges{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.badge{background:var(--surface);border-radius:16px;padding:12px 8px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px}
+.medal{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:20px;color:#130f22;background:var(--gold)}
+.badge.off{opacity:.4}.badge.off .medal{background:var(--surface2);color:var(--muted)}
+.badge b{font-size:12.5px;line-height:1.2}
+.badge span{font-size:11px;color:var(--muted);line-height:1.2}
+/* settings */
+.opt{display:flex;gap:8px;flex-wrap:wrap}
+.opt button{padding:10px 16px;border-radius:12px;background:var(--surface2);font-weight:700;border:2px solid transparent}
+.opt button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
+.setrow{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.switch{width:52px;height:30px;border-radius:99px;background:var(--surface2);position:relative;flex:none}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:var(--muted);transition:.2s}
+.switch[aria-checked="true"]{background:var(--accent)}
+.switch[aria-checked="true"]::after{left:25px;background:#fff}
+input[type=time]{background:var(--surface2);border:0;color:var(--fg);padding:10px 12px;border-radius:12px;font:inherit;font-weight:700}
+.toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 14px);transform:translateX(-50%);background:var(--gold);color:#251a00;font-weight:800;padding:12px 18px;border-radius:14px;z-index:50;animation:up .25s;box-shadow:0 8px 24px rgba(0,0,0,.4);max-width:90vw;text-align:center}
+.onb{padding-top:30px}
+.hero-notes{display:flex;gap:6px;margin-bottom:6px}
+.hero-notes i{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;font-style:normal;font-family:var(--display);font-weight:800;color:#130f22;font-size:14px}
+/* clavier à l'écran, leçons Comprendre, défis Au clavier */
+.kb{position:relative;display:flex;height:150px;border-radius:6px 6px 14px 14px;overflow:hidden;background:#0b0c18;border:2px solid #0b0c18;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.wk{flex:none;height:100%;background:#f3f1ff;border-right:1px solid #8f93bd;border-radius:0 0 7px 7px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding:0 0 8px;color:#1a1730;min-width:0;transition:filter .08s,transform .08s}
+.wk .kl{font-family:var(--display);font-weight:800;font-size:18px;line-height:1}
+.wk .kn{font-style:normal;font-size:10px;color:#4b4d70;margin-top:2px;white-space:nowrap}
+.bk{position:absolute;top:0;height:92px;background:#0b0c18;border-radius:0 0 6px 6px;z-index:2;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding-bottom:5px;color:#fff;font-family:var(--display);font-weight:800;font-size:13px;box-shadow:inset 0 -4px 0 rgba(255,255,255,.12);transition:filter .08s,transform .08s}
+.wk.hl .kl,.wk.hl .kn,.bk.hl{color:#130f22}
+.wk.on,.bk.on{filter:brightness(1.3);transform:translateY(3px)}
+.tag{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;font-weight:800;padding:2px 8px;border-radius:99px;background:var(--surface2);color:var(--accent2)}
+.learn p{font-size:16.5px}
+.steps{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:8px}
+.ans.long.txt{align-items:flex-start}
+.ans.long.txt b{font-family:var(--body);font-size:16px;font-weight:700;text-align:left}
+.ans.right{border-color:var(--good);background:#123a2e}
+.ans.wrong{border-color:var(--bad);background:#3d1624}
+.ans:disabled{cursor:default}
+.opt.sm button{padding:8px 12px;font-size:14px}
+.nav2{display:grid;grid-template-columns:1fr 2fr;gap:10px}
+.mb{display:block;width:100%;height:8px;background:var(--surface2);border-radius:99px;overflow:hidden}
+.mb i{display:block;height:100%;border-radius:99px}
+.week.w14{grid-template-columns:repeat(14,1fr);gap:3px}
+.week.w14 div{font-size:9px}
+.step{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start}
+.stepn{width:34px;height:34px;border-radius:50%;background:var(--surface2);display:grid;place-items:center;font-family:var(--display);font-weight:800}
+.stepn.done{background:var(--good);color:#06291a}
+.rgw{display:grid;gap:4px;width:100%}
+.rg{width:100%;display:grid;grid-template-columns:repeat(8,1fr);gap:4px}
+.rgc{height:32px;border-radius:8px;background:var(--surface2);font-size:11px;color:var(--muted);display:grid;place-items:center;font-weight:700}
+.rgc.h{background:var(--d2);color:#2b1700}
+.rgc.cur{outline:2px solid #fff;outline-offset:1px}
+.ans.rgans{padding:12px}
+.vis{display:grid;gap:6px;padding:10px;border-radius:14px;background:rgba(255,255,255,.06)}
+.lad{position:relative;display:flex;align-items:flex-end;gap:4px;height:124px;padding-top:20px}
+.rung{flex:1;border-radius:8px 8px 4px 4px;background:var(--c);display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;font-weight:800;color:#12142a;border:2px solid var(--c);font-size:14px;position:relative}
+.rung.un{background:transparent;color:var(--fg);border-style:dashed;opacity:.8}
+.rung.me{outline:3px solid var(--good);outline-offset:1px;opacity:1}
+.rung.you{outline:3px solid var(--bad);outline-offset:1px;opacity:1}
+.ball{position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.5);transition:left .32s ease,bottom .32s ease;pointer-events:none;z-index:2}
+.fmap{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:4px;align-items:stretch;text-align:center}
+.fz{border-radius:12px;background:var(--surface2);padding:8px 4px;display:grid;gap:6px;align-content:start;animation:zone 6s infinite}
+.fz:nth-child(3){animation-delay:2s}.fz:nth-child(5){animation-delay:4s}
+.fz b{font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.fz span.c{display:inline-block;padding:3px 8px;border-radius:99px;background:var(--surface);font-weight:800}
+.fz span.c.ok{outline:2px solid var(--good)}.fz span.c.ko{outline:2px solid var(--bad)}
+.farr{align-self:center;color:var(--muted);font-weight:800}
+@keyframes zone{0%,100%{box-shadow:none}10%,30%{box-shadow:0 0 0 2px var(--gold)}}
+.cont polyline{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.cont .g{stroke:var(--good);stroke-dasharray:1;stroke-dashoffset:1;animation:draw 1.6s ease forwards}
+.cont .r{stroke:var(--bad);stroke-dasharray:4 4;opacity:.9}
+@keyframes draw{to{stroke-dashoffset:0}}
+.tri{position:relative;height:86px;width:60%;margin:0 auto}
+.tri i{position:absolute;left:0;right:0;height:10px;border-radius:6px;background:var(--d5)}
+.tri i.r{bottom:0;background:var(--d1)}.tri i.f{bottom:50px;background:var(--d5)}
+.tri i.t{bottom:34px;background:var(--d3);animation:third 4s ease-in-out infinite}
+@keyframes third{0%,35%{bottom:40px}50%,85%{bottom:30px}100%{bottom:40px}}
+@media (prefers-reduced-motion:reduce){.fz,.tri i.t,.cont .g{animation:none}.cont .g{stroke-dashoffset:0}}
+.aidefab{position:fixed;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(78px + env(safe-area-inset-bottom,0px));z-index:25;display:flex;align-items:center;gap:6px;padding:10px 14px;border-radius:99px;background:var(--surface2);border:1px solid var(--line);font-weight:700;font-size:14px;box-shadow:0 4px 14px rgba(0,0,0,.4)}
+.aide{position:fixed;inset:0;z-index:45;display:flex;justify-content:center;align-items:flex-end;background:rgba(5,6,16,.6)}
+.aide .in{width:100%;max-width:560px;height:82vh;background:var(--surface);border-radius:24px 24px 0 0;display:flex;flex-direction:column;padding:16px max(16px,env(safe-area-inset-left,0px)) calc(12px + env(safe-area-inset-bottom,0px));gap:10px}
+.aide .msgs{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;min-height:0}
+.aide .m{padding:10px 12px;border-radius:14px;font-size:15px;white-space:pre-wrap;max-width:92%}
+.aide .m.u{align-self:flex-end;background:var(--accent);color:#1a0d06}
+.aide .m.a{align-self:flex-start;background:var(--surface2)}
+.aide .sug{display:flex;flex-wrap:wrap;gap:6px}
+.aide .sug button{padding:8px 12px;border-radius:99px;background:var(--surface2);font-size:13.5px;font-weight:700}
+.aide form{display:flex;gap:8px}
+.aide textarea{flex:1;resize:none;height:48px;border-radius:14px;border:2px solid var(--line);background:var(--bg);color:var(--fg);font:inherit;padding:10px 12px}
+.aide form button{padding:0 16px;border-radius:14px;background:var(--accent);color:#1a0d06;font-weight:800}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div id="app"></div>
+
+<script>
+/* ===================== DONNÉES MUSICALES ===================== */
+const SCALE=[0,2,4,5,7,9,11];
+const QUAL=['M','m','m','M','M','m','d'];
+const ROM=['I','ii','iii','IV','V','vi','vii°'];
+const FR={C:'Do',D:'Ré',E:'Mi',F:'Fa',G:'Sol',A:'La',B:'Si'};
+const KEYS=[
+ {id:'C',semi:0,notes:['C','D','E','F','G','A','B']},
+ {id:'G',semi:7,notes:['G','A','B','C','D','E','F#']},
+ {id:'F',semi:5,notes:['F','G','A','Bb','C','D','E']},
+ {id:'D',semi:2,notes:['D','E','F#','G','A','B','C#']},
+ {id:'Bb',semi:10,notes:['Bb','C','D','Eb','F','G','A']},
+ {id:'A',semi:9,notes:['A','B','C#','D','E','F#','G#']},
+ {id:'Eb',semi:3,notes:['Eb','F','G','Ab','Bb','C','D']},
+ {id:'E',semi:4,notes:['E','F#','G#','A','B','C#','D#']}];
+const DCOL=['','var(--d1)','var(--d2)','var(--d3)','var(--d4)','var(--d5)','var(--d6)','var(--d7)'];
+
+const DEG={
+1:{n:'Le 1, la tonique',s:true,t:`C'est la maison. Tout est posé, rien ne bouge. La plupart des mélodies finissent ici.`},
+2:{n:'Le 2',s:false,t:`Instable : il est juste au-dessus du 1 et veut redescendre. Il sonne « en suspens », comme une question.`},
+3:{n:'Le 3',s:true,t:`Stable et lumineux : c'est lui qui rend la gamme majeure joyeuse. Il fait partie de l'accord de la maison (1-3-5).`},
+4:{n:'Le 4',s:false,t:`Il pèse vers le bas et tire vers le 3 juste en dessous. Une tension douce, un peu « suspendue ».`},
+5:{n:'Le 5',s:true,t:`Stable et ouvert, il fait partie de l'accord de la maison. Solide, mais plus « en l'air » que le 1.`},
+6:{n:'Le 6',s:false,t:`Une couleur tendre, un peu nostalgique. Instable : il retombe d'un pas sur le 5.`},
+7:{n:'Le 7, la sensible',s:false,t:`La note la plus instable : collée sous le 1, elle veut absolument y monter. On l'entend « tirer ».`}};
+const CHD={
+1:`<b>I, la maison.</b> Repos complet : les chansons commencent et finissent souvent ici.`,
+2:`<b>ii, mineur doux.</b> Il prépare souvent le V (ii → V → I) et remplace souvent le IV.`,
+3:`<b>iii, mineur plus rare.</b> Il va souvent vers le IV ou le vi.`,
+4:`<b>IV, le départ.</b> On quitte la maison en douceur : il sonne ouvert, lumineux, « ça s'élève ».`,
+5:`<b>V, la tension.</b> Il appelle le retour au I, comme une question qui attend sa réponse.`,
+6:`<b>vi, le mineur de la famille.</b> Il partage deux notes avec le I, mais sonne triste et émouvant.`};
+const RES={1:[1],2:[2,1],3:[3,2,1],4:[4,3,2,1],5:[5,4,3,2,1],6:[6,5],7:[7,8]};
+const PROG4=[[1,5,6,4],[1,6,4,5],[6,4,1,5],[1,4,5,1],[1,4,6,5],[4,1,5,6],[1,5,4,5],[6,5,4,5],[1,6,2,5],[2,5,1,6],[1,2,4,5],[1,3,4,5],[4,5,3,6],[1,5,6,3]];
+const FAMOUS=[
+ {p:[1,5,6,4],nick:'La grille pop',songs:`« Let It Be », « Don't Stop Believin' »`},
+ {p:[1,6,4,5],nick:'La grille des années 50',songs:'« Stand by Me »'},
+ {p:[6,4,1,5],nick:'La grille pop, côté mineur',songs:'« Zombie » (The Cranberries)'},
+ {p:[1,4,5,1],nick:'La base du rock et du blues',songs:'nombreux morceaux rock'}];
+
+/* ===================== OUTILS PÉDAGOGIQUES ===================== */
+const NN=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const isBlack=m=>[1,3,6,8,10].includes(((m%12)+12)%12);
+const tx=s=>String(s).replace(/\{([A-G][#b]?)\}/g,(_,n)=>fmt(n));
+const rng=(k,a,b)=>Array.from({length:b-a+1},(_,i)=>degMidi(k,a+i));
+const chA=(k,d)=>{const c=chordMidis(k,d);return [c.bass,...c.tri]};
+const chNotes=(k,d)=>d===8?[fmt(B7[k.id]),fmt(k.notes[1]),fmt(k.notes[3])].join(' – '):d===9?[4,6,1,3].map(i=>fmt(k.notes[i])).join(' – '):[0,2,4].map(i=>fmt(k.notes[(d-1+i)%7])).join(' – ');
+function hlOf(k,d){const dd=(d-1)%7+1;return {d:dd,l:dd,n:fmt(k.notes[dd-1])}}
+function scaleHL(k,from=1,to=8){const h={};for(let d=from;d<=to;d++)h[degMidi(k,d)]=hlOf(k,d);return h}
+function degsHL(k,ds){const h={};ds.forEach(d=>{h[degMidi(k,d)]=hlOf(k,d)});return h}
+function chordHL(k,d){const c=chordMidis(k,d),h={};c.tri.forEach((m,i)=>{h[m]=hlOf(k,d+2*i)});return h}
+const dDegs=(l,ds,gap=.55)=>({l,run:k=>playSeqM(ds.map(d=>degMidi(k,d)),gap)});
+const dScale=(l='Écouter la gamme')=>({l,run:k=>playSeqM(rng(k,1,8),.42)});
+const dChords=(l,ds,gap=1.1)=>({l,run:k=>playSeqM(ds.map(d=>chA(k,d)),gap)});
+const dMidis=(l,ms,gap=.7)=>({l,run:()=>playSeqM(ms,gap)});
+const SELCH=ds=>ds.map(d=>({v:d,l:ROM[d-1]}));
+
+/* ===================== NOUVEAU CONTENU : RYTHME, MINEUR, ACCORDS POP ===================== */
+const SCALEM=[0,2,3,5,7,8,10],QUALM=['m','d','M','m','m','M','M'],ROMM=['i','ii°','III','iv','v','VI','VII'];
+ROM.push('♭VII','V7');QUAL.push('M','M');
+DCOL.push('#ff8787','#38d9a9');
+const MKEYS=[
+ {id:'Am',m:1,semi:9,notes:['A','B','C','D','E','F','G']},
+ {id:'Em',m:1,semi:4,notes:['E','F#','G','A','B','C','D']},
+ {id:'Dm',m:1,semi:2,notes:['D','E','F','G','A','Bb','C']},
+ {id:'Gm',m:1,semi:7,notes:['G','A','Bb','C','D','Eb','F']},
+ {id:'Bm',m:1,semi:11,notes:['B','C#','D','E','F#','G','A']},
+ {id:'Cm',m:1,semi:0,notes:['C','D','Eb','F','G','Ab','Bb']}];
+const B7={C:'Bb',G:'F',F:'Eb',D:'C',Bb:'Ab',A:'G',Eb:'Db',E:'D'};
+PROG4.push([1,8,4,1],[1,8,4,5],[1,5,8,4]);
+const PROG4M=[[1,6,3,7],[1,7,6,7],[1,4,7,3],[1,6,7,1],[1,3,7,6],[1,7,6,4]];
+const DEGM={
+1:{n:'Le 1, la tonique',s:true,t:`La maison, en mineur : tout est posé. La musique se sent chez elle, mais avec une couleur plus sombre.`},
+2:{n:'Le 2',s:false,t:`Instable : il redescend vers le 1, comme en majeur.`},
+3:{n:'Le 3 (♭3)',s:true,t:`Stable. C'est lui qui donne sa couleur triste au mineur : il est un demi-ton plus bas qu'en majeur.`},
+4:{n:'Le 4',s:false,t:`Instable : il retombe vers le 3. Il sonne un peu suspendu.`},
+5:{n:'Le 5',s:true,t:`Stable, ouvert, identique à celui du majeur.`},
+6:{n:'Le 6 (♭6)',s:false,t:`Instable et sombre : il retombe vers le 5. Plus bas qu'en majeur, il donne une couleur dramatique.`},
+7:{n:'Le 7 (♭7)',s:false,t:`Moins tendu que la sensible du majeur : il est un ton sous le 1. Il peut monter vers le 1 ou redescendre vers le 6. Très courant en pop et en rock.`}};
+const CHDM={
+1:`<b>i, la maison mineure.</b> Repos, avec une couleur sombre : les chansons en mineur commencent et finissent souvent ici.`,
+2:`<b>ii°, instable.</b> Un accord « diminué », rare en pop.`,
+3:`<b>III, majeur et lumineux.</b> C'est l'accord majeur « cousin » : il éclaire la tonalité mineure.`,
+4:`<b>iv, mineur, on s'éloigne.</b> Il sonne sombre et émouvant, comme un départ en douceur.`,
+5:`<b>v, mineur.</b> Moins de tension que le V majeur, plus discret.`,
+6:`<b>VI, majeur, l'ouverture.</b> Un accord majeur qui s'ouvre après le i : très courant (i – VI – III – VII).`,
+7:`<b>VII, majeur, ça pousse vers le i.</b> Un accord lumineux un ton sous la maison, très courant en pop et en rock.`};
+CHD[8]=`<b>♭VII, l'accord rock.</b> Un accord majeur construit un ton sous la maison. Il sonne ouvert, un peu rebelle : I – ♭VII – IV est un classique.`;
+CHD[9]=`<b>V7, la tension renforcée.</b> Le V auquel on ajoute une 7e : il tire encore plus fort vers le I. Très blues.`;
+const SELCHM=ds=>ds.map(d=>({v:d,l:ROMM[d-1]}));
+function chordHLX(k,d){const c=chordMidis(k,d),h={};
+ const spec=d===8?[[7,'♭7',fmt(B7[k.id])],[2,'2',fmt(k.notes[1])],[4,'4',fmt(k.notes[3])]]:[[5,'5',fmt(k.notes[4])],[7,'7',fmt(k.notes[6])],[2,'2',fmt(k.notes[1])],[4,'4',fmt(k.notes[3])]];
+ c.tri.forEach((m,i)=>{h[m]={d:spec[i][0],l:spec[i][1],n:spec[i][2]}});return h}
+const PAT={
+ q:[[1,0,1,0,1,0,1,0],[1,0,0,0,1,0,0,0],[1,0,1,0,0,0,1,0],[1,0,0,0,1,0,1,0],[1,0,1,0,1,0,0,0],[0,0,1,0,0,0,1,0]],
+ e:[[1,1,1,1,1,1,1,1],[1,0,1,1,1,0,1,1],[1,1,1,0,1,1,1,0],[1,0,1,0,1,1,1,1],[1,1,1,1,1,0,1,0],[1,0,1,1,1,0,1,0]],
+ s:[[1,0,0,1,0,0,1,0],[0,1,0,1,0,1,0,1],[1,0,0,1,0,1,1,0],[1,0,1,0,0,1,0,1],[1,1,0,1,0,1,1,0],[1,0,0,1,1,0,1,0]],
+ m:[[1,0,1,1,0,1,1,1],[1,0,0,1,1,0,1,0],[1,0,1,0,1,1,1,0],[1,1,0,1,0,1,1,1],[1,0,0,0,1,0,1,1],[1,0,1,1,0,1,0,1]]};
+const KBV=(b,v)=>v==='I'?[[b,1],[b+4,3],[b+7,5]]:v==='IV'?[[b,1],[b+5,4],[b+9,6]]:v==='V'?[[b-1,7],[b+2,2],[b+7,5]]:[[b,1],[b+4,3],[b+7,5]];
+const hlList=(k,l)=>{const h={};l.forEach(([m,d])=>{h[m]=hlOf(k,d)});return h};
+const bassOf=(b,v)=>v==='V'?b-12+7:b-12;
+const U_R={id:'ur',title:'Le rythme',goal:'Rythme',col:'#ffa94d',desc:'Jouer les bonnes notes ne suffit pas : il faut les placer dans le temps.',L:[
+ {id:'r1',type:'learn',t:'La pulsation et les « et »',pages:[
+  {t:'La pulsation',h:`Sous chaque chanson, il y a une pulsation régulière : le « tic-tac » sur lequel tu tapes du pied. On la compte <b>1 – 2 – 3 – 4</b>, puis on recommence. C'est le squelette du rythme.`,rgs:[{l:'Quatre temps frappés',p:[1,0,1,0,1,0,1,0]}],demos:[{l:'Écouter la pulsation',run:()=>playPat([1,0,1,0,1,0,1,0])}]},
+  {t:'Les « et »',h:`Entre deux temps, on peut placer un coup de plus : le <b>« et »</b>. On compte alors <b>1 et 2 et 3 et 4 et</b>. Un coup sur un « et » s'appelle un contretemps. Dans l'app, il est noté +.`,rgs:[{l:'Tous les temps et tous les « et »',p:[1,1,1,1,1,1,1,1]},{l:'Seulement les « et »',p:[0,1,0,1,0,1,0,1]}],demos:[{l:'Écouter tout',run:()=>playPat([1,1,1,1,1,1,1,1])},{l:'Écouter les « et » seuls',run:()=>playPat([0,1,0,1,0,1,0,1])}]},
+  {t:'Lire une grille rythmique',h:`Dans l'app, un rythme s'affiche en <b>8 cases</b> : 1 + 2 + 3 + 4 +. Case orange : tu joues. Case grise : silence. Tu entends d'abord 4 clics pour donner le tempo, puis le rythme, deux fois.`,rgs:[{p:[1,0,1,1,0,1,1,1]}],demos:[{l:'Écouter ce rythme',run:()=>playPat([1,0,1,1,0,1,1,1])}],tip:`Tape du pied sur chaque temps pendant que tu écoutes : tu verras tomber les coups.`}],
+  qs:[
+   {q:`Combien de temps compte une mesure habituelle de chanson pop ?`,o:[`4`,`2`,`7`,`12`],w:`La plupart des chansons pop comptent 4 temps par mesure : 1 – 2 – 3 – 4.`},
+   {q:`Qu'est-ce que la pulsation ?`,o:[`Le tic-tac régulier sur lequel on tape du pied`,`La mélodie de la chanson`,`La note la plus grave`,`La vitesse de la voix`],w:`La pulsation est le battement régulier. Tous les rythmes se placent dessus.`},
+   {q:`Qu'est-ce qu'un contretemps ?`,o:[`Un coup placé sur un « et », entre deux temps`,`Un silence de quatre temps`,`Un coup plus fort que les autres`,`Un accord mineur`],w:`Un contretemps tombe entre deux temps : sur le « et ». C'est lui qui donne du mouvement.`},
+   {q:`Dans l'app, que représentent les 8 cases d'un rythme ?`,o:[`Une mesure : 1 + 2 + 3 + 4 +`,`Huit notes différentes`,`Huit accords`,`Huit secondes`],w:`Chaque case est un demi-temps : les temps (1, 2, 3, 4) et les « et » (+) entre eux.`}]},
+ {id:'r2',type:'rhy',t:'La pulsation : quels temps ?',pats:PAT.q,intro:`Un rythme se place sur une pulsation régulière. Ici, seuls les temps 1, 2, 3 et 4 peuvent être frappés. Tape du pied et repère les temps où il y a un coup.`,tip:`Compte 1-2-3-4 dans ta tête : un temps sans coup est un silence.`},
+ {id:'r3',type:'rhy',t:'Les croches : temps et « et »',pats:PAT.e,intro:`Maintenant, des coups peuvent aussi tomber sur les « et ». Compte 1 et 2 et 3 et 4 et, et repère où tombent les coups.`,tip:`Un coup qui tombe entre deux battements de pied, c'est un « et ».`},
+ {id:'r4',type:'learn',t:'Syncopes et motifs',pages:[
+  {t:'La syncope',h:`Une <b>syncope</b> : on joue un « et » et on ne rejoue pas le temps qui suit. L'accent tombe à contretemps, ce qui donne du mouvement. Voici un motif : coups sur 1, sur le « et » du 2, et sur 4.`,rgs:[{p:[1,0,0,1,0,0,1,0]}],demos:[{l:'Écouter ce motif',run:()=>playPat([1,0,0,1,0,0,1,0])}]},
+  {t:`Les motifs d'accompagnement`,h:`Pour t'accompagner, tu répètes un motif simple sur tes accords : par exemple <b>1, 2, « et » du 2, « et » du 3, 4, « et » du 4</b>. Le même motif tourne sur toute la chanson : seul l'accord change.`,rgs:[{p:[1,0,1,1,0,1,1,1]}],demos:[{l:`Écouter sur l'accord de {C}`,run:()=>playPat([1,0,1,1,0,1,1,1],chA(KEYS[0],1))}]},
+  {t:`Jouer l'accord en rythme`,h:`Tu peux jouer l'accord entier à chaque coup du motif, ou la basse sur les temps forts et l'accord sur les autres. Commence lentement, en tapant du pied sur chaque temps, puis accélère.`,rgs:[{p:[1,0,0,1,1,0,1,0]}],demos:[{l:`Écouter sur l'accord de {C}`,run:()=>playPat([1,0,0,1,1,0,1,0],chA(KEYS[0],1))}]}],
+  qs:[
+   {q:`Qu'est-ce qu'une syncope ?`,o:[`Un coup sur un « et » sans rejouer le temps suivant`,`Un silence entre deux accords`,`Un accord joué plus fort`,`Un changement de tonalité`],w:`La syncope déplace l'accent sur un contretemps : on entend un coup « à côté » du temps attendu.`},
+   {q:`Que fait-on d'un motif d'accompagnement ?`,o:[`On le répète sur toute la chanson, l'accord change`,`On le change à chaque mesure`,`On le joue une seule fois`,`On le chante`],w:`Le motif reste le même. Tu changes seulement l'accord dessus : c'est ce qui fait tenir une chanson.`},
+   {q:`Comment bien apprendre un motif rythmique ?`,o:[`Lentement, en tapant du pied sur chaque temps`,`Le plus vite possible`,`Sans écouter la pulsation`,`En regardant ses mains seulement`],w:`La pulsation d'abord, la vitesse ensuite. Ton pied garde le tempo, tes mains placent les coups.`}]},
+ {id:'r5',type:'rhy',t:'Syncopes',pats:PAT.s,intro:`Des rythmes qui évitent certains temps et tombent sur des « et » : les syncopes. C'est ce qui rend un rythme « groovy ».`,tip:`Repère d'abord s'il y a un coup sur le 1, puis place les « et ».`},
+ {id:'r6',type:'rhy',t:`Motifs d'accompagnement`,pats:PAT.m,intro:`Des motifs qu'on trouve vraiment en accompagnement de chansons : mélange de temps, de « et » et de silences.`,tip:`Écoute deux fois : la première pour le tempo, la seconde pour repérer les coups.`},
+ {id:'r7',type:'kb',t:'Au clavier : un accord en rythme',intro:`Joue un accord en suivant un motif rythmique, en tapant du pied sur chaque temps.`,steps:[`Choisis un accord ci-dessous : les trois touches s'allument.`,`Joue-le sur le motif affiché : orange = tu joues, gris = silence. Compte 1 + 2 + 3 + 4 + à voix haute.`,`Reste sur le même accord pendant 8 mesures, puis passe à l'accord suivant sans arrêter le motif.`],pick:true,sel:SELCH([1,4,5,6]),kb:(k,s)=>chordHL(k,s),rgs:[{l:'Motif à jouer',p:[1,0,1,1,0,1,1,1]}],demos:[{l:'Écouter le motif avec cet accord',run:(k,s)=>playPat([1,0,1,1,0,1,1,1],chA(k,s))}],hint:`Commence très lentement. Si tu perds le tempo, joue seulement les 4 temps (1-2-3-4), puis ajoute les « et ».`}]};
+const U_M={id:'um',title:'Le mode mineur',goal:'Mineur',col:'#b197fc',desc:'La couleur sombre des chansons en mineur : une autre maison, les mêmes touches.',L:[
+ {id:'m0',type:'learn',t:'Le mode mineur',pages:[
+  {t:'Une autre maison',sel:[{v:'M',l:'{C} majeur'},{v:'m',l:'{A} mineur'}],h:`Il existe une deuxième gamme très courante : la gamme <b>mineure</b>. Elle sonne plus sombre. Chaque gamme majeure a une gamme mineure « cousine » avec les <b>mêmes notes</b>, mais une autre note maison : le 6e degré. {C} majeur et {A} mineur utilisent les mêmes touches blanches.`,kb:(k,s)=>scaleHL(s==='M'?KEYS[0]:MKEYS[0]),demos:[{l:'Écouter la gamme',run:(k,s)=>playSeqM(rng(s==='M'?KEYS[0]:MKEYS[0],1,8),.42)}]},
+  {t:'La couleur sombre',keys:MKEYS,pick:true,h:k=>`Formule de la gamme mineure : ton, demi-ton, ton, ton, demi-ton, ton, ton. Comparée au majeur, trois notes sont un demi-ton plus bas : le <b>3</b>, le <b>6</b> et le <b>7</b> (on dit ♭3, ♭6, ♭7). C'est surtout le ♭3 qui donne la couleur triste. Gamme de <b>${keyName(k)}</b> : ${k.notes.map(fmt).join(' – ')}.`,kb:k=>scaleHL(k),demos:[dScale('Écouter la gamme mineure'),{l:'Même départ, en majeur',run:k=>playSeqM([...SCALE.map(x=>tonic(k)+x),tonic(k)+12],.42)}]},
+  {t:'Les accords du mineur',keys:MKEYS,pick:true,sel:SELCHM([1,3,4,6,7]),h:(k,s)=>`En mineur, on utilise des chiffres romains aussi : <b>i, iv, v</b> sont mineurs ; <b>III, VI, VII</b> sont majeurs. Ici : <b>${ROMM[s-1]}</b> en ${keyName(k)} = <b>${chordName(k,s)}</b> (${chNotes(k,s)}).`,kb:(k,s)=>chordHL(k,s),demos:[{l:'Écouter cet accord',run:(k,s)=>playSeqM([chA(k,s)],1.4)},{l:'Écouter i – VI – III – VII',run:k=>playSeqM([1,6,3,7].map(d=>chA(k,d)),1.1)}],tip:`Beaucoup de chansons tournent sur i – VI – III – VII, ou sur i – VII – VI.`}],
+  qs:[
+   {q:`La gamme de {A} mineur utilise les mêmes notes que…`,o:[`{C} majeur`,`{G} majeur`,`{A} majeur`,`{E} majeur`],w:`{A} mineur et {C} majeur partagent les mêmes touches blanches : seule la note maison change.`},
+   {q:`Quelle note donne surtout sa couleur triste au mineur ?`,o:[`Le 3, un demi-ton plus bas (♭3)`,`Le 1`,`Le 5`,`Le 2`],w:`Le ♭3 : il rend l'accord de la maison mineur, donc plus sombre.`},
+   {q:`En mineur, quels accords sont majeurs ?`,o:[`III, VI et VII`,`i, iv et v`,`i, III et v`,`iv, VI et VII`],w:`i, iv et v sont mineurs. III, VI et VII sont majeurs : ils éclairent la tonalité.`},
+   {q:`L'accord i est…`,o:[`La maison, avec une couleur mineure`,`Un accord de tension`,`Un accord majeur`,`Le dernier accord à éviter`],w:`Le i est construit sur la note maison. Il est mineur, donc plus sombre que le I du majeur.`}]},
+ {id:'m1',type:'deg',minor:true,set:[1,3,5],t:'Les notes stables du mineur',intro:`Même principe qu'en majeur, mais la maison est mineure. Le 1, le 3 (♭3) et le 5 sont les notes stables : celles de l'accord de la maison.`,tip:`Le 3 sonne plus sombre ici qu'en majeur : c'est le ♭3.`},
+ {id:'m2',type:'deg',minor:true,set:[1,2,3,4,5,6,7],t:'Toute la gamme mineure',intro:`Les 7 degrés du mineur. Le 6 et le 7 sont plus bas qu'en majeur et donnent une couleur plus sombre.`,tip:`Le 7 (♭7) est moins tendu qu'en majeur : il ne « tire » pas autant vers le 1.`},
+ {id:'m3',keys:'all',type:'chord',minor:true,set:[1,3,4,6,7],t:'Les accords du mineur',intro:`Cinq accords à reconnaître : i (la maison), III, iv, VI et VII. Écoute la basse et la couleur : mineur sombre (i, iv) ou majeur lumineux (III, VI, VII).`,tip:`Majeur ou mineur d'abord, puis la basse pour trancher.`},
+ {id:'m4',type:'prog',minor:true,len:4,set:[1,3,4,6,7],keys:'all',t:'Grilles en mineur',intro:`Des grilles de 4 accords en mineur, comme i – VI – III – VII. Toujours en partant du i.`,tip:`Repère d'abord les accords majeurs (III, VI, VII), puis place-les.`},
+ {id:'m5',type:'mel',minor:true,len:4,set:[1,2,3,4,5,6,7],keys:'all',t:'Mélodies en mineur',intro:`Des mélodies de 4 notes en mineur. Retrouve la maison d'abord, puis suis les degrés.`,tip:`Si tu hésites, compare avec la gamme majeure : le ♭3, ♭6 et ♭7 sont plus bas.`},
+ {id:'mk',type:'kb',t:'Au clavier : le mode mineur',intro:`Joue en mineur : la gamme, puis la grille i – VI – III – VII.`,steps:[`Choisis une tonalité mineure ({A} mineur pour commencer, que des touches blanches). Joue la gamme de {A} à {A}.`,`Joue chaque accord de la grille i – VI – III – VII avec trois doigts, deux temps chacun.`,`Chante la note de basse de chaque accord.`],keys:MKEYS,pick:true,sel:SELCHM([1,6,3,7]),kb:(k,s)=>chordHL(k,s),demos:[dScale('Écouter la gamme'),{l:'Écouter la grille i – VI – III – VII',run:k=>playSeqM([1,6,3,7].map(d=>chA(k,d)),1.1)}],hint:`{A} mineur n'utilise que des touches blanches : c'est la gamme de {C} majeur, jouée à partir du {A}.`}]};
+const U_P={id:'up',title:'Les accords de la pop',goal:'Accompagnement',col:'#ff8787',desc:'Deux accords « empruntés » que l’on entend partout : le ♭VII et le V7.',L:[
+ {id:'p1',type:'learn',t:'Le ♭VII et le V7',pages:[
+  {t:`Le ♭VII, l'accord rock`,pick:true,h:k=>`Parfois, on emprunte un accord majeur construit un ton sous la maison : le <b>♭VII</b>. En ${keyName(k)}, c'est <b>${chordName(k,8)}</b>. Il sonne ouvert, un peu rebelle. Une grille classique : <b>I – ♭VII – IV – I</b>.`,kb:k=>chordHLX(k,8),demos:[{l:'Écouter le ♭VII',run:k=>playSeqM([chA(k,8)],1.4)},dChords('I – ♭VII – IV – I',[1,8,4,1],1.1)]},
+  {t:'Le V7',pick:true,sel:[{v:5,l:'V'},{v:9,l:'V7'}],h:(k,s)=>`On peut ajouter au V une 4e note, une 7e : c'est le <b>V7</b>. En ${keyName(k)} : <b>${chordName(k,9)}</b>. Il tire encore plus fort vers le I. On l'entend beaucoup dans le blues et le jazz.`,kb:(k,s)=>s===9?chordHLX(k,9):chordHL(k,5),demos:[dChords('V → I',[5,1],1.2),dChords('V7 → I',[9,1],1.2)]},
+  {t:'Les entendre',pick:true,h:`Compare : le <b>♭VII</b> ajoute une couleur rock, le <b>V7</b> ajoute de la tension. Ils ne changent pas le rôle du I (la maison), du IV (on s'éloigne) ou du V (la tension) : ils les colorent.`,demos:[dChords('I – ♭VII – IV – I',[1,8,4,1],1.1),dChords('I – IV – V7 – I',[1,4,9,1],1.1),dChords('I – IV – V – I',[1,4,5,1],1.1)]}],
+  qs:[
+   {q:`En {C} majeur, quel est le ♭VII ?`,o:[`{Bb} majeur`,`{B} majeur`,`{A}m`,`{F}`],w:`Un ton sous la maison : {Bb} majeur. Le « ♭ » veut dire que le 7e degré est abaissé d'un demi-ton.`},
+   {q:`Quel accord tire le plus fort vers le I ?`,o:[`Le V7`,`Le IV`,`Le vi`,`Le ♭VII`],w:`Le V7 : au V s'ajoute une note de plus qui augmente la tension.`},
+   {q:`La grille I – ♭VII – IV – I sonne plutôt…`,o:[`Rock, ouverte`,`Triste, sombre`,`Comme une valse`,`Dissonante`],w:`Le ♭VII est majeur et lumineux : la grille sonne ouverte, façon rock.`},
+   {q:`Qu'est-ce qui distingue le V7 du V ?`,o:[`Une 4e note (la 7e)`,`Il est mineur`,`Il est plus grave`,`Il est plus rapide`],w:`Le V7 ajoute une 7e au V. Par exemple {G}7 = {G} – {B} – {D} – {F}.`}]},
+ {id:'p2',type:'chord',keys:'all',set:[1,4,5,8],t:'Le ♭VII dans les accords',intro:`Le <b>♭VII</b> rejoint le I, le IV et le V. Il est majeur et lumineux, un ton sous la maison : écoute sa basse.`,tip:`Si la basse est juste sous le 1, c'est probablement le ♭VII.`},
+ {id:'p3',type:'prog',keys:'all',len:4,set:[1,4,5,8],t:'Grilles avec ♭VII',intro:`Des grilles de 4 accords avec le ♭VII, comme I – ♭VII – IV – I.`,tip:`Repère d'abord où tombe le ♭VII, souvent juste après la maison.`},
+ {id:'p4',type:'chord',keys:'all',set:[1,4,5,9],t:'V ou V7 ?',intro:`Distingue le <b>V</b> du <b>V7</b> : le V7 est plus tendu, avec une petite dissonance qui réclame le I.`,tip:`Si ça « gratte » un peu et appelle le I avec insistance, c'est le V7.`},
+ {id:'p5',type:'kb',t:'Au clavier : I – ♭VII – IV',intro:`Joue la grille d'un grand classique rock : I – ♭VII – IV.`,steps:[`Choisis ta tonalité. Joue chaque accord avec trois doigts : I, ♭VII, IV, puis retour au I.`,`Joue chaque accord deux temps, en boucle, sur un motif de ton choix.`,`Chante une note de la mélodie par-dessus.`],pick:true,sel:[{v:1,l:'I'},{v:8,l:'♭VII'},{v:4,l:'IV'}],kb:(k,s)=>s===8?chordHLX(k,8):chordHL(k,s),demos:[dChords('Écouter I – ♭VII – IV – I',[1,8,4,1],1.1)],hint:`Le ♭VII est un ton sous la maison : un seul doigt à déplacer par rapport au IV, deux par rapport au I.`}]};
+let CK=KEYS[0],CHL=null;
+const SC=k=>k&&k.m?SCALEM:SCALE,QL=k=>k&&k.m?QUALM:QUAL;
+const RR=()=>CK.m?ROMM:ROM,DG=()=>CK.m?DEGM:DEG,CH=()=>CK.m?CHDM:CHD;
+
+/* ===================== PARCOURS ===================== */
+const U=[
+ {id:'u0',title:'Les bases',goal:'Comprendre',col:'var(--d3)',desc:'Le clavier, la gamme majeure et les degrés. Trois leçons courtes, puis ton premier défi au clavier.',L:[
+  {id:'b1',type:'learn',t:'Le clavier et les 12 notes',pages:[
+   {t:'Les touches se répètent',h:`Regarde les touches noires : elles vont par groupes de 2 et de 3. Le <b>{C}</b> est la touche blanche juste avant un groupe de 2 touches noires. Touche les notes pour les entendre.`,kb:()=>({60:{d:1,l:'',n:fmt('C')},72:{d:1,l:'',n:fmt('C')}}),kbopt:{from:60,to:72,names:true},demos:[dMidis('Écouter les touches blanches',[60,62,64,65,67,69,71,72],.4)]},
+   {t:"Il n'y a que 12 notes",h:`En tout : <b>12 notes</b>, soit 7 touches blanches ({C} {D} {E} {F} {G} {A} {B}) et 5 noires (les dièses ♯ et les bémols ♭). Après le {B}, on retombe sur le {C} : la même note, en plus aigu. On appelle ça une <b>octave</b>.`,kb:()=>({}),kbopt:{from:60,to:72,names:true},demos:[dMidis('Écouter les 12 notes',Array.from({length:13},(_,i)=>60+i),.22)]},
+   {t:'Demi-ton et ton',h:`Le plus petit écart entre deux notes est le <b>demi-ton</b> : deux touches voisines, noires ou blanches. Deux demi-tons font un <b>ton</b>. Entre {E} et {F}, et entre {B} et {C}, il n'y a pas de touche noire : ce sont des demi-tons.`,kb:()=>({64:{d:2,l:'½',n:fmt('E')},65:{d:2,l:'½',n:fmt('F')},71:{d:6,l:'½',n:fmt('B')},72:{d:6,l:'½',n:fmt('C')}}),kbopt:{from:60,to:72,names:true},demos:[dMidis('{E} → {F} : un demi-ton',[64,65],.7),dMidis('{C} → {D} : un ton',[60,62],.7),dMidis('{B} → {C} : un demi-ton',[71,72],.7)]}],
+   qs:[
+    {q:`Quelle touche blanche précède toujours un groupe de 2 touches noires ?`,o:[`{C}`,`{D}`,`{F}`,`{G}`],w:`Le {C} : le groupe de 2 touches noires ({C}♯ et {D}♯) commence juste après lui. Le {F} précède, lui, le groupe de 3.`},
+    {q:`Combien de notes différentes y a-t-il avant de retomber sur la même note, plus aiguë ?`,o:[`12`,`7`,`8`,`5`],w:`12 : 7 touches blanches et 5 noires. La 13e est la même note en plus aigu : c'est l'octave.`},
+    {q:`Entre quelles notes y a-t-il un demi-ton, sans touche noire entre elles ?`,o:[`{E} et {F}`,`{C} et {D}`,`{F} et {G}`,`{A} et {B}`],w:`{E} et {F} se touchent : c'est un demi-ton. C'est pareil pour {B} et {C}. Ailleurs sur les touches blanches, une touche noire s'intercale : l'écart est d'un ton.`},
+    {q:`Combien de demi-tons y a-t-il dans un ton ?`,o:[`2`,`1`,`3`,`12`],w:`Un ton = deux demi-tons. Par exemple de {C} à {D}, en passant par la touche noire.`}]},
+  {id:'b2',type:'learn',t:'La gamme majeure',pages:[
+   {t:'La formule',h:`Une <b>gamme</b> est une suite de 7 notes qui se termine sur la note de départ, plus aiguë. La gamme majeure suit toujours le même schéma d'écarts : <b>ton, ton, demi-ton, ton, ton, ton, demi-ton</b>. En partant du {C}, il suffit de jouer les touches blanches.`,kb:()=>scaleHL(KEYS[0]),demos:[dScale('Écouter la gamme de {C} majeur')]},
+   {t:'Où sont les demi-tons',h:`Les deux demi-tons sont entre le <b>3 et le 4</b>, et entre le <b>7 et le 8</b> (le 1 du haut). Partout ailleurs, l'écart est d'un ton. Ce sont ces deux endroits qui donnent à la gamme sa forme.`,kb:()=>scaleHL(KEYS[0]),demos:[dDegs('1 → 2 : un ton',[1,2],.7),dDegs('3 → 4 : un demi-ton',[3,4],.7),dDegs('7 → 1 : un demi-ton',[7,8],.7)]},
+   {t:'La même formule, partout',pick:true,h:(k)=>`Pars de n'importe quelle note et applique la formule : tu obtiens la gamme majeure de cette note. Choisis ta note de départ : <b>${keyName(k)}</b> = ${k.notes.map(fmt).join(' – ')}. Selon la note de départ, des touches noires s'ajoutent pour respecter la formule.`,kb:k=>scaleHL(k),demos:[dScale()],tip:`Tu n'as pas besoin d'apprendre les 12 gammes. On en verra 8 plus tard : ce sont les plus utiles.`}],
+   qs:[
+    {q:`Quelle est la formule de la gamme majeure ?`,o:[`ton, ton, demi-ton, ton, ton, ton, demi-ton`,`ton, demi-ton, ton, ton, demi-ton, ton, ton`,`demi-ton, ton, ton, ton, demi-ton, ton, ton`,`ton, ton, ton, demi-ton, ton, ton, demi-ton`],w:`Ton, ton, demi-ton, ton, ton, ton, demi-ton. Une astuce : les demi-tons tombent entre 3-4 et 7-8.`},
+    {q:`Où se trouvent les demi-tons dans la gamme majeure ?`,o:[`Entre 3-4 et entre 7-8`,`Entre 1-2 et entre 5-6`,`Entre 2-3 et entre 6-7`,`Entre 4-5 et entre 7-8`],w:`Entre le 3 et le 4, et entre le 7 et le 8. En {C} majeur, ce sont les paires {E}–{F} et {B}–{C}.`},
+    {q:`Combien de notes différentes contient une gamme majeure ?`,o:[`7`,`8`,`12`,`5`],w:`7 notes, numérotées de 1 à 7. Le « 8 » est le 1 qui revient, une octave plus haut.`},
+    {q:`En {C} majeur, quelle note est le degré 5 ?`,o:[`{G}`,`{F}`,`{A}`,`{E}`],w:`{C}=1, {D}=2, {E}=3, {F}=4, {G}=5.`}]},
+  {id:'b3',type:'learn',t:'Penser en degrés',pages:[
+   {t:'Chaque note a un numéro',h:`On numérote les 7 notes de la gamme de 1 à 7. Le <b>1</b> est la note de départ : la <b>note maison</b> (la tonique). On parle de <b>degrés</b>. C'est avec ces numéros que tu vas penser la musique.`,kb:()=>scaleHL(KEYS[0]),demos:[dScale()]},
+   {t:'Les numéros ne bougent pas',pick:true,h:(k)=>`En ${keyName(k)}, le 1 est ${fmt(k.notes[0])} et le 5 est ${fmt(k.notes[4])}. Dans une autre tonalité, le 5 est une autre note, mais il joue le même rôle. Change de tonalité : les numéros restent, les notes changent.`,kb:k=>scaleHL(k),demos:[dScale(),dDegs('Écouter 1 – 3 – 5',[1,3,5],.6)]},
+   {t:'Pourquoi c\'est utile',pick:true,h:`Une chanson jouée en {C} ou en {G} est la même chanson : les degrés sont identiques. Si tu reconnais les degrés à l'oreille, tu peux jouer une mélodie dans n'importe quelle tonalité. Écoute ce petit motif 1 – 2 – 3 – 1 dans la tonalité de ton choix.`,kb:k=>degsHL(k,[1,2,3]),demos:[dDegs('Écouter le motif 1-2-3-1',[1,2,3,1],.5)],tip:`Pour chanter dans ta voix, tu changes seulement la note maison. Rien d'autre.`}],
+   qs:[
+    {q:`En {G} majeur ({G} {A} {B} {C} {D} {E} {F#}), quelle note est le degré 5 ?`,o:[`{D}`,`{C}`,`{E}`,`{B}`],w:`On compte à partir de la note maison : {G}=1, {A}=2, {B}=3, {C}=4, {D}=5.`},
+    {q:`Une chanson passe de {C} majeur à {G} majeur. Qu'est-ce qui change ?`,o:[`Les notes jouées, mais pas les degrés`,`Les degrés, mais pas les notes`,`Tout change`,`Rien du tout`],w:`Seule la note maison change de place. Les degrés (la mélodie vue en numéros) et les accords (I, IV, V…) restent les mêmes.`},
+    {q:`Comment s'appelle le degré 1, la note de départ de la gamme ?`,o:[`La tonique, ou « note maison »`,`La dominante`,`L'octave`,`La sensible`],w:`Le 1 est la tonique : la note où la musique se sent chez elle. Le 5 est la dominante et le 7 la sensible.`},
+    {q:`En {F} majeur ({F} {G} {A} {Bb} {C} {D} {E}), quel est le degré 3 ?`,o:[`{A}`,`{G}`,`{C}`,`{Bb}`],w:`{F}=1, {G}=2, {A}=3.`}]},
+  {id:'b4',type:'kb',t:'Au clavier : la gamme majeure',intro:`Joue la gamme de {C} majeur avec la main droite, en montant puis en descendant.`,steps:[`Pose le pouce sur le {C}, juste avant le groupe de 2 touches noires.`,`Monte note par note : {C} {D} {E} {F} {G} {A} {B} {C}. Doigts : 1-2-3, le pouce passe sous la main, puis 1-2-3-4-5.`,`Redescends. Dis les degrés à voix haute en jouant : 1 2 3 4 5 6 7 1.`],kb:()=>scaleHL(KEYS[0]),demos:[dScale('Écouter le modèle')],hint:`Les touches allumées sont les bonnes. Entre {E} et {F}, et entre {B} et {C}, il n'y a pas de touche noire : c'est là que se trouvent les demi-tons.`}]},
+ {id:'u1',title:'La maison',goal:'Mélodie',col:'var(--d1)',desc:'Reconnaître les notes essentielles (1, 5, 3, 2) par rapport à la note maison. La tonalité change à chaque question : tu reconnais le rôle de la note, pas sa hauteur.',L:[
+  {id:'1a',t:'Le 1 et le 5',type:'deg',keys:'all',set:[1,5],intro:`Chaque question commence par 4 accords, la <b>cadence</b>. Elle installe la tonalité : la « maison ». Ensuite, une note sonne.<br><br>La tonalité change à chaque question : tu ne peux donc pas retenir le son d'une note, il faut sentir sa place par rapport à la maison.<br><br><b>Le 1</b>, c'est la maison : tout est posé. <b>Le 5</b> est stable aussi, mais plus « en l'air ».`,tip:`Après chaque bonne réponse, écoute la note rentrer à la maison et chante-la.`},
+  {id:'1b',t:"Les notes de l'accord maison",type:'deg',keys:'all',set:[1,3,5],intro:`1, 3 et 5 forment l'accord du I. Ce sont les <b>notes stables</b> (Hooktheory 3.3). Le 3 apporte la couleur joyeuse du majeur.`,tip:`Si la note semble « posée », c'est l'une des trois. Reste à sentir laquelle.`},
+  {id:'1c',t:'Le 2, la note en suspens',type:'deg',keys:'all',set:[1,2,3,5],intro:`Le 2 est la première note <b>instable</b> : il n'est pas dans l'accord de la maison et veut redescendre au 1.`,tip:`Une note qui « pose une question » et veut descendre d'un pas, c'est souvent le 2.`},
+  {id:'1d',opt:true,t:'Le 4, la note qui pèse',type:'deg',keys:'all',set:[1,2,3,4,5],intro:`Le 4 tire vers le 3 juste en dessous. Avec lui, tu connais la première moitié de la gamme : 1 2 3 4 5.`,tip:`Chante le chemin vers le 1 en comptant les marches : 4 → 3 → 2 → 1.`},
+  {id:'1e',opt:true,t:'Le 6, la note tendre',type:'deg',keys:'all',set:[1,2,3,4,5,6],intro:`Le 6 a une couleur nostalgique. Les notes au-dessus du 5 <b>montent</b> vers le 1 du haut : 6 → 7 → 1.`,tip:`Les notes 2, 3, 4 redescendent vers le 1. Les notes 5, 6, 7 montent vers le 1 du haut.`},
+  {id:'1f',opt:true,t:'Le 7, la sensible',type:'deg',keys:'all',set:[1,2,3,4,5,6,7],intro:`Le 7 est collé sous le 1 et veut absolument y monter. Avec lui, tu as toute la gamme majeure.`,tip:`Si la note « tire » très fort vers le haut, c'est le 7.`},
+  {id:'rp',type:'learn',t:'Un air connu pour chaque note',pages:[
+   {t:'Une chanson pour chaque degré',pick:true,sel:[1,2,3,4,5,6,7,8].map(d=>({v:d,l:d===8?'Octave':String(d)})),h:(k,s)=>`Pour reconnaître une note, accroche-la à un air que tu connais par cœur. Pour <b>${s===8?'l\'octave':'le '+s}</b> : <b>« ${REP[s].s} »</b>. ${repHow(s)} Notes jouées : ${REP[s].d.map(d=>fmt(k.notes[(d-1)%7])).join(' – ')}.`,kb:(k,s)=>degsHL(k,[...new Set(REP[s].d)]),demos:[{l:'Écouter le début de l\'air',run:(k,s)=>playSeqM(REP[s].d.map(d=>degMidi(k,d)),.5)},{l:'Avec la cadence',run:(k,s)=>playRep(k,s,true)}],tip:'Ce sont seulement les premières notes : chante-les dans ta tête avant de répondre.'},
+   {t:'Comment t\'en servir',h:`Méthode : (1) écoute la cadence et garde la maison en tête ; (2) écoute la note mystère ; (3) chante l'air de ton choix en partant de la maison : si la note mystère tombe au bon moment dans l'air, tu as trouvé son degré. Ça marche dans toutes les tonalités, car l'air est toujours construit sur les mêmes degrés. Ce n'est qu'une béquille : avec la pratique, tu reconnaîtras la sensation sans l'air.`}],
+  qs:[
+   {q:'Par quelle note commence « Ode à la joie » ?',o:['Le 3','Le 1','Le 5','Le 7'],w:'« Ode à la joie » démarre sur le 3, répété, puis monte au 4 et au 5.'},
+   {q:'Dans le début de « Joyeux anniversaire », la dernière note est…',o:['Le 7, qui veut monter au 1','Le 1','Le 5','Le 3'],w:'La ligne finit sur le 7 : une note instable, qui attend le 1.'},
+   {q:'Quel point commun entre « Au clair de la lune » et « Frère Jacques » ?',o:['Ils commencent par la note maison (1)','Ils commencent par le 5','Ils commencent par le 7','Ils sont en mineur'],w:'Les deux démarrent sur le 1 : la maison.'},
+   {q:'Comment s\'appelle le saut du 1 au 1 plus aigu, comme au début d\'« Over the Rainbow » ?',o:['Une octave','Un demi-ton','Un accord','Une gamme'],w:'Une octave : la même note, en plus aigu.'}]},
+  {id:'1g',opt:true,t:'Sur deux octaves',type:'deg',keys:'all',set:[1,2,3,4,5,6,7],wide:true,intro:`Même gamme, mais les notes peuvent être plus graves ou plus aiguës. Un 3 reste un 3, quelle que soit sa hauteur.`,tip:`Ne cherche pas la hauteur : cherche la « personnalité » de la note.`},
+  {id:'1h',type:'kb',t:'Au clavier : 1 – 3 – 5',intro:`Passe de l'oreille aux doigts : joue les trois notes stables de la maison.`,steps:[`Joue le 1, le 3, le 5, puis redescends : 1-3-5-3-1. Chante chaque note en la jouant.`,`Ferme les yeux, joue la note maison (1) et chante le 5 dans ta tête. Rouvre les yeux et vérifie en jouant le 5.`,`Change de tonalité avec les boutons et refais 1-3-5-3-1.`],pick:true,kb:k=>degsHL(k,[1,3,5]),demos:[dDegs('Écouter 1-3-5-3-1',[1,3,5,3,1],.6)],hint:`Ces trois notes forment l'accord de la maison : elles sonnent toujours bien ensemble.`}]},
+ {id:'u2',title:'Les accords qui accompagnent',goal:'Accompagnement',col:'var(--d5)',desc:'Entendre les accords que tes mains joueront sous ta voix.',L:[
+    {id:'c1',type:'learn',t:'Construire un accord',pages:[
+   {t:'Un accord, ce sont 3 notes',h:`Un accord simple empile trois notes de la gamme en sautant une note à chaque fois : le <b>1</b>, le <b>3</b> et le <b>5</b>. En {C} majeur : {C}, {E}, {G}. Joue les trois touches ensemble : c'est l'accord de {C} majeur.`,kb:()=>chordHL(KEYS[0],1),demos:[dMidis('Les 3 notes une par une',[60,64,67],.6),dMidis('Les 3 ensemble',[[48,60,64,67]],1.4)]},
+   {t:'Majeur ou mineur ?',h:`Le <b>3</b> décide de la couleur. À 4 demi-tons du 1, l'accord est <b>majeur</b> : lumineux. À 3 demi-tons, il est <b>mineur</b> : plus sombre. Le 1 et le 5 ne bougent pas.`,sel:[{v:'M',l:'Majeur'},{v:'m',l:'Mineur'}],kb:(k,s)=>({60:{d:1,l:1,n:fmt('C')},[s==='M'?64:63]:{d:3,l:3,n:s==='M'?fmt('E'):fmt('Eb')},67:{d:5,l:5,n:fmt('G')}}),demos:[{l:`Écouter l'accord`,run:(k,s)=>playSeqM([[48,60,s==='M'?64:63,67]],1.4)}],tip:`On note un accord mineur avec un « m » : {A}m = {A} mineur.`}],
+   qs:[
+    {q:`Quelles notes forment l'accord de {C} majeur ?`,o:[`{C} – {E} – {G}`,`{C} – {D} – {E}`,`{C} – {F} – {A}`,`{C} – {E} – {A}`],w:`Le 1, le 3 et le 5 de la gamme de {C} : {C}, {E}, {G}.`},
+    {q:`Quelle note change entre un accord majeur et un accord mineur ?`,o:[`Le 3, un demi-ton plus bas en mineur`,`Le 1`,`Le 5`,`Aucune, c'est le rythme qui change`],w:`Seul le 3 bouge : {C}–{E}–{G} (majeur) devient {C}–{Eb}–{G} (mineur).`},
+    {q:`{A} mineur se joue {A} – {C} – {E}. Quel est l'écart entre {A} et {C} ?`,o:[`3 demi-tons`,`2 demi-tons`,`4 demi-tons`,`5 demi-tons`],w:`De {A} à {C} : {A}→{A#}→{B}→{C}, soit 3 demi-tons. C'est la signature d'un accord mineur.`}]},
+  {id:'2a',t:'Majeur ou mineur ?',type:'qual',intro:`Un accord <b>majeur</b> sonne stable et lumineux. Un accord <b>mineur</b> sonne plus sombre, émouvant. Une seule note change : le 3 est un demi-ton plus bas.`,tip:`Demande-toi : joyeux ou triste ?`},
+    {id:'c2',type:'learn',t:"Les accords d'une tonalité",pages:[
+   {t:'Un accord sur chaque degré',pick:true,sel:SELCH([1,2,3,4,5,6,7]),h:(k,s)=>`On peut construire un accord sur chacun des 7 degrés, avec les seules notes de la gamme. On les note en chiffres romains : <b>I, ii, iii, IV, V, vi, vii°</b>. Choisis un degré. Ici : <b>${ROM[s-1]}</b> en ${keyName(k)} = <b>${chordName(k,s)}</b> (${chNotes(k,s)}).`,kb:(k,s)=>chordHL(k,s),demos:[{l:`Écouter cet accord`,run:(k,s)=>playSeqM([chA(k,s)],1.4)}],tip:`Le vii° est un accord à part, très rare en pop : tu peux l'ignorer.`},
+   {t:'Majeurs et mineurs',pick:true,h:`Le schéma est le même dans toutes les tonalités : <b>I, IV, V</b> sont majeurs ; <b>ii, iii, vi</b> sont mineurs. Retiens surtout I, IV, V et vi : ce sont les accords de la pop. Écoute-les d'affilée.`,demos:[dChords('Écouter I – IV – V – vi',[1,4,5,6],1.1),dChords('Écouter ii – iii',[2,3],1.1)]},
+   {t:'Le rôle de chaque accord',pick:true,h:`<b>I</b> : la maison, le repos. <b>IV</b> : on s'éloigne, ça s'ouvre. <b>V</b> : la tension, il veut retourner au I. <b>vi</b> : le mineur de la famille, plus émouvant. Une chanson est un trajet : on part de la maison, on s'éloigne, on crée de la tension, on revient.`,demos:[dChords('Écouter I → IV → V → I',[1,4,5,1],.9),dChords('Écouter V → I',[5,1],1.2)]}],
+   qs:[
+    {q:`Quels accords sont mineurs dans une tonalité majeure ?`,o:[`ii, iii et vi`,`I, IV et V`,`I, ii et V`,`IV, V et vi`],w:`ii, iii et vi sont mineurs. I, IV et V sont majeurs. Le schéma est identique dans toutes les tonalités.`},
+    {q:`En {C} majeur, quel accord est le V ?`,o:[`{G}`,`{F}`,`{D}m`,`{A}m`],w:`{C}=1, {D}=2, {E}=3, {F}=4, {G}=5 : le V est l'accord construit sur le {G}.`},
+    {q:`Quel accord est la maison, celui où l'on se sent chez soi ?`,o:[`Le I`,`Le IV`,`Le V`,`Le vi`],w:`Le I : il est construit sur la note maison. Le V crée la tension, le IV s'éloigne, le vi donne une couleur mineure.`},
+    {q:`En {G} majeur ({G} {A} {B} {C} {D} {E} {F#}), quel accord est le vi ?`,o:[`{E}m`,`{C}`,`{D}`,`{A}m`],w:`Le vi est construit sur le degré 6, le {E}, et il est mineur : {E}m.`}]},
+  {id:'2b',keys:'all',t:'La maison ou la tension ?',type:'chord',set:[1,5],intro:`Le <b>I</b> est la maison, le <b>V</b> la tension qui veut y revenir. Ce sont les deux accords les plus importants pour accompagner.`,tip:`Écoute la note la plus grave, la basse : elle donne le nom de l'accord.`},
+  {id:'2c',keys:'all',t:'Les trois piliers',type:'chord',set:[1,4,5],intro:`I, IV et V : avec ces trois accords, tu peux accompagner des centaines de chansons. Le <b>IV</b> sonne comme un départ en douceur.`,tip:`IV « s'ouvre », V « attend ». Le I « se pose ».`},
+  {id:'2d',keys:'all',t:'Les 4 accords de la pop',type:'chord',set:[1,4,5,6],intro:`On ajoute le <b>vi</b>, le seul mineur des quatre. I, IV, V et vi : le chapitre 2 de Hooktheory à l'oreille.`,tip:`Si c'est triste, c'est le vi. Sinon, cherche parmi I, IV et V.`},
+  {id:'2e',type:'kb',t:'Au clavier : I – IV – V',intro:`Joue les accords principaux d'une tonalité, chacun avec trois doigts.`,steps:[`Choisis un accord ci-dessous : les trois touches s'allument. Pose-y trois doigts et joue-les ensemble.`,`Enchaîne I – IV – V – I, deux temps par accord.`,`Écoute la note la plus grave à chaque changement : c'est la basse, ce que tu apprends à reconnaître à l'oreille.`],pick:true,sel:SELCH([1,4,5,6]),kb:(k,s)=>chordHL(k,s),demos:[dChords('Écouter I – IV – V – I',[1,4,5,1],1)],hint:`Si les doigts se mélangent, joue d'abord la note de basse seule, puis ajoute les deux autres.`}]},
+ {id:'u3',title:'Les enchaînements',goal:'Accompagnement',col:'var(--d4)',desc:"Suivre une grille d'accords, comme dans une vraie chanson.",L:[
+  {id:'3a',keys:'all',t:'Deux accords',type:'prog',len:2,set:[1,4,5,6],intro:`Deux accords à la suite. Le premier est toujours le I : à toi de trouver le second.`,tip:`Note les accords dans l'ordre. Tu peux réécouter autant que tu veux.`},
+    {id:'d1',type:'learn',t:'Pourquoi ces grilles marchent',pages:[
+   {t:'La résolution V → I',pick:true,sel:SELCH([5,1]),h:`Le mouvement le plus fort en musique est <b>V → I</b> : la tension se relâche et on rentre à la maison. Écoute-le, puis écoute IV → I, plus doux.`,kb:(k,s)=>chordHL(k,s),demos:[dChords('Écouter V → I',[5,1],1.2),dChords('Écouter IV → I',[4,1],1.2)]},
+   {t:'La grille I – V – vi – IV',pick:true,sel:SELCH([1,5,6,4]),h:`On part de la maison (I), on crée de la tension (V), on passe au mineur (vi), puis on s'ouvre (IV), ce qui ramène naturellement au I. La boucle ne s'arrête jamais, d'où l'effet « tube ». On la trouve dans « Let It Be » ou « Don't Stop Believin' ».`,kb:(k,s)=>chordHL(k,s),demos:[dChords('Écouter la grille',[1,5,6,4],1.1)]},
+   {t:'Les autres grilles',pick:true,h:`<b>I – vi – IV – V</b> : la grille des années 50 (« Stand by Me »). <b>vi – IV – I – V</b> : les mêmes accords que la grille pop, mais en partant du mineur : plus mélancolique (« Zombie »). <b>I – IV – V – I</b> : la base du rock et du blues. Les mêmes accords dans un autre ordre changent l'émotion.`,demos:FAMOUS.map(f=>dChords(f.p.map(d=>ROM[d-1]).join(' – '),f.p,1))}],
+   qs:[
+    {q:`Quel mouvement donne la plus forte impression de retour à la maison ?`,o:[`V → I`,`IV → vi`,`I → IV`,`ii → iii`],w:`V → I : le V est la tension, le I la résolution. C'est le mouvement de base de presque toute la musique pop.`},
+    {q:`Quelle est la grille pop la plus célèbre ?`,o:[`I – V – vi – IV`,`I – IV – V – I`,`vi – ii – iii – I`,`V – IV – iii – I`],w:`I – V – vi – IV, par exemple {C} – {G} – {A}m – {F} en {C} majeur.`},
+    {q:`Pourquoi la grille pop peut-elle tourner en boucle sans lasser ?`,o:[`Elle finit sur le IV, qui ramène au I`,`Elle est très rapide`,`Elle est toujours en mineur`,`Elle n'a que deux accords`],w:`Le IV prépare le retour au I : la fin de la grille appelle le début, donc la boucle est naturelle.`},
+    {q:`Une grille qui commence par le vi sonne plutôt…`,o:[`Mélancolique`,`Joyeuse`,`Comme une fanfare`,`Identique à une grille qui commence par le I`],w:`Le vi est mineur : commencer par lui donne une couleur plus triste, même avec les mêmes accords que la grille pop.`}]},
+  {id:'3b',keys:'all',t:'Les grilles célèbres',type:'progid',intro:`Quatre grilles reviennent dans des milliers de chansons. Reconnais-les à leur couleur générale.`,tip:`Qui commence sur un accord triste ? C'est la version « mineure » de la grille pop.`},
+  {id:'3c',keys:'all',t:'Trois accords',type:'prog',len:3,set:[1,4,5,6],intro:`Trois accords à retrouver, toujours en partant du I.`,tip:`Repère d'abord le vi (le mineur), puis départage I, IV et V.`},
+  {id:'3d',keys:'all',t:'Une grille complète',type:'prog',len:4,set:[1,4,5,6],intro:`Quatre accords, comme une vraie grille de chanson. Elle ne commence pas toujours par le I.`,tip:`Si la grille te dit quelque chose, c'est sans doute une grille célèbre.`},
+  {id:'v1',type:'learn',t:'Les renversements',pages:[
+   {t:'Un même accord, plusieurs formes',sel:[{v:0,l:'Position de base'},{v:1,l:'1er renversement'},{v:2,l:'2e renversement'}],h:`Un accord peut se jouer avec ses notes dans un autre ordre : c'est un <b>renversement</b>. {C}–{E}–{G} (position de base), {E}–{G}–{C} (1er renversement), {G}–{C}–{E} (2e renversement). Les trois sont le même accord, avec la même couleur.`,kb:(k,s)=>{const b=[60,64,67];const r=b.slice(s).concat(b.slice(0,s).map(x=>x+12));const dg=[1,3,5];const dr=dg.slice(s).concat(dg.slice(0,s));const h={};r.forEach((m,i)=>{h[m]=hlOf(KEYS[0],dr[i])});return h},demos:[{l:'Écouter cette forme',run:(k,s)=>{const b=[60,64,67];const r=b.slice(s).concat(b.slice(0,s).map(x=>x+12));playSeqM([[48,...r]],1.4)}}]},
+   {t:'Pourquoi bouger moins',sel:[{v:'I',l:'I'},{v:'IV',l:'IV (2e renv.)'},{v:'V',l:'V (1er renv.)'},{v:'I2',l:'I'}],h:`Pour enchaîner I – IV – V – I, il n'est pas nécessaire de faire sauter ta main. En choisissant un renversement du IV et un du V, chaque doigt ne bouge que d'un pas : la main reste en place, le résultat est plus fluide.`,kb:(k,s)=>hlList(KEYS[0],KBV(60,s==='I2'?'I':s)),demos:[{l:'Écouter I – IV – V – I sans sauter',run:()=>playSeqM([[48,60,64,67],[53,60,65,69],[55,59,62,67],[48,60,64,67]],1)},{l:'Écouter la version avec sauts',run:()=>playSeqM([[48,60,64,67],[53,65,69,72],[55,67,71,74],[48,60,64,67]],1)}],tip:`Compare les deux versions : c'est le même enchaînement, mais la première glisse, la seconde saute.`}],
+   qs:[
+    {q:`Qu'est-ce qu'un renversement ?`,o:[`Le même accord avec ses notes dans un autre ordre`,`Un accord joué à l'envers dans le temps`,`Un accord mineur`,`Un accord plus rapide`],w:`Les notes sont les mêmes ({C}, {E}, {G}), mais on commence par une autre : {E}–{G}–{C} est un renversement du {C} majeur.`},
+    {q:`À quoi servent les renversements ?`,o:[`À enchaîner les accords en bougeant peu la main`,`À jouer plus fort`,`À changer de tonalité`,`À changer de rythme`],w:`Ils rapprochent les accords les uns des autres : tes doigts font des petits pas au lieu de grands sauts.`},
+    {q:`{E}–{G}–{C} est…`,o:[`Le 1er renversement de {C} majeur`,`Le 2e renversement de {C} majeur`,`{E} mineur`,`{G} majeur`],w:`Le {E} (le 3 de l'accord) est à la basse : c'est le 1er renversement.`}]},
+  {id:'3e',type:'kb',t:'Au clavier : la grille pop',intro:`Joue la grille la plus célèbre de la pop dans la tonalité de ton choix : I – V – vi – IV.`,steps:[`Choisis ta tonalité ({C} pour commencer).`,`Joue chaque accord avec trois doigts, deux temps chacun, en boucle : I – V – vi – IV.`,`Chante la note de basse de chaque accord, puis essaie de chanter une chanson que tu connais par-dessus.`],pick:true,sel:SELCH([1,5,6,4]),kb:(k,s)=>chordHL(k,s),demos:[dChords('Écouter la grille',[1,5,6,4],1.1)],hint:`Ralentis. Quand tu es à l'aise, change d'accord sans regarder tes mains.`},
+  {id:'v2',type:'kb',t:'Au clavier : I – IV – V – I sans sauter',intro:`Enchaîne les trois accords principaux en bougeant le moins possible.`,steps:[`Pose ta main sur le I en position de base.`,`Passe au IV en 2e renversement (la note du bas reste en place), puis au V en 1er renversement, puis retour au I.`,`Essaie dans une autre tonalité avec les boutons.`],pick:true,sel:[{v:'I',l:'I'},{v:'IV',l:'IV (2e renv.)'},{v:'V',l:'V (1er renv.)'},{v:'I2',l:'I'}],kb:(k,s)=>hlList(k,KBV(tonic(k),s==='I2'?'I':s)),demos:[{l:'Écouter la version fluide',run:k=>{const b=tonic(k);playSeqM([[b-12,...KBV(b,'I').map(x=>x[0])],[b-7,...KBV(b,'IV').map(x=>x[0])],[b-5,...KBV(b,'V').map(x=>x[0])],[b-12,...KBV(b,'I').map(x=>x[0])]],1)}}],hint:`Entre le I et le IV, la note du bas ne bouge pas. Entre le IV et le V, deux doigts montent ou descendent d'un seul pas.`}
+]},
+ {id:'u4',title:'Retrouver une mélodie',goal:'Mélodie',col:'var(--d2)',desc:'Retrouver une suite de notes, comme un bout de chanson.',L:[
+    {id:'e1',type:'learn',t:'Comment une mélodie bouge',pages:[
+   {t:'Notes stables et instables',h:`Les notes <b>1, 3 et 5</b> sont <b>stables</b> : ce sont celles de l'accord de la maison, on peut s'y poser. Les notes <b>2, 4, 6 et 7</b> sont <b>instables</b> : elles veulent bouger vers une note stable voisine.`,kb:()=>scaleHL(KEYS[0]),demos:[dDegs('Les stables : 1 – 3 – 5',[1,3,5],.6),dDegs('Les instables : 2 – 4 – 6 – 7',[2,4,6,7],.6)]},
+   {t:'La résolution',sel:[{v:[2,1],l:'2 → 1'},{v:[4,3],l:'4 → 3'},{v:[7,8],l:'7 → 1'},{v:[6,5],l:'6 → 5'}],h:`Une note instable se résout vers la note stable la plus proche : <b>2 → 1</b>, <b>4 → 3</b>, <b>6 → 5</b>, et le <b>7</b> monte vers le <b>1</b>. C'est ce qui donne l'impression qu'une mélodie avance ou se pose.`,kb:(k,s)=>degsHL(k,s),demos:[{l:'Écouter la résolution',run:(k,s)=>playSeqM(s.map(d=>degMidi(k,d)),.7)}]},
+   {t:'Retrouver une mélodie',h:`Pour retrouver une mélodie à l'oreille : (1) repère la <b>note maison</b>, (2) suis la <b>direction</b> : ça monte ou ça descend, (3) compte les <b>petits pas</b>, (4) regarde la dernière note : stable, la phrase se pose ; instable, elle attend la suite.`,kb:()=>scaleHL(KEYS[0]),demos:[dDegs('Une phrase qui se pose (finit sur 1)',[3,4,3,2,1],.5),dDegs('Une phrase en suspens (finit sur 2)',[1,3,4,3,2],.5)]}],
+   qs:[
+    {q:`Quelles notes sont stables ?`,o:[`1, 3 et 5`,`2, 4 et 6`,`1, 4 et 7`,`3, 5 et 7`],w:`1, 3 et 5 forment l'accord de la maison : ce sont les notes stables. Les autres veulent bouger.`},
+    {q:`Vers quelle note le 7 veut-il aller ?`,o:[`Le 1, au-dessus`,`Le 5`,`Le 3`,`Le 4`],w:`Le 7 est collé sous le 1 : il monte d'un demi-ton vers lui. On l'appelle la sensible.`},
+    {q:`Une phrase qui finit sur le 2 donne l'impression…`,o:[`D'attendre la suite`,`De se poser`,`D'être terminée`,`D'être en mineur`],w:`Le 2 est instable : il veut redescendre vers le 1. La phrase reste donc en suspens.`},
+    {q:`Quel est le premier réflexe pour retrouver une mélodie à l'oreille ?`,o:[`Repérer la note maison`,`Compter toutes les notes`,`Deviner la dernière note`,`Chercher les accords`],w:`Sans note maison, impossible de donner un degré aux autres notes. Elle sert de repère à tout le reste.`}]},
+  {id:'4a',keys:'all',t:'3 notes, pas à pas',type:'mel',len:3,set:[1,2,3,4,5],step:true,intro:`Trois notes qui avancent par petits pas. La plupart des mélodies bougent ainsi.`,tip:`Repère la direction (ça monte, ça descend), puis compte les pas.`},
+  {id:'4b',keys:'all',t:'3 notes, toute la gamme',type:'mel',len:3,set:[1,2,3,4,5,6,7],intro:`Les notes peuvent maintenant sauter plus loin.`,tip:`Sur un saut, cherche d'abord si la note est stable (1, 3, 5).`},
+  {id:'4c',keys:'all',t:'4 notes',type:'mel',len:4,set:[1,2,3,4,5,6,7],step:true,intro:`Quatre notes : un vrai petit motif de chanson.`,tip:`Chante la mélodie dans ta tête avant de répondre.`},
+  {id:'4d',keys:'all',t:'Une phrase de 5 notes',type:'mel',len:5,set:[1,2,3,4,5,6,7],intro:`Cinq notes, comme une phrase de chanson.`,tip:`Retrouve la première et la dernière note, puis remplis le milieu.`},
+  {id:'4e',type:'kb',t:"Au clavier : le début d'une chanson",intro:`Premier essai pour jouer sans partition : retrouve le début d'une chanson que tu connais.`,steps:[`Choisis une chanson simple et très connue (une comptine fait l'affaire).`,`Chante-la dans ta tête et trouve sa note maison : celle sur laquelle elle se pose à la fin.`,`Cherche la première note à tâtons, puis la suivante : ça monte ou ça descend ? de combien de pas ?`,`Facultatif : vérifie les degrés sur TheoryTab.`],pick:true,kb:k=>degsHL(k,[1]),demos:[{l:'Jouer la note maison',run:k=>playSeqM([degMidi(k,1)],1)},{l:'Écouter la cadence',run:k=>{const t=newBus();cadence(k,t)}}],hint:`Commence par 3 ou 4 notes seulement. Si tu bloques, cherche d'abord la dernière note : c'est souvent le 1.`}]},
+ {id:'u5',title:'Toutes les tonalités',goal:'Mélodie + accords',col:'var(--d6)',desc:'La maison change de place, les degrés restent les mêmes.',L:[
+    {id:'f1',type:'learn',t:'Les tonalités principales',pages:[
+   {t:'8 tonalités suffisent',pick:true,h:(k)=>`Pas besoin des 12 gammes : ces 8 tonalités couvrent presque toutes les chansons pop. Choisis-en une. Gamme de <b>${keyName(k)}</b> : ${k.notes.map(fmt).join(' – ')}. Touches noires utilisées : ${k.notes.filter(n=>n.length>1).length}.`,kb:k=>scaleHL(k),demos:[dScale()]},
+   {t:'Le tableau à garder',h:()=>`Même formule, notes différentes :<br>${KEYS.map(k=>`<b>${keyName(k)}</b> : ${k.notes.map(fmt).join(' ')}`).join('<br>')}`,tip:`Commence par {C} (aucune touche noire), {G} et {F} (une seule). Les autres viendront avec la pratique.`},
+   {t:'Choisir la tonalité de ta voix',pick:true,sel:SELCH([1,5,6,4]),h:`Pour chanter, la tonalité compte : trop haut, tu forces ; trop bas, tu perds ta voix. Essaie la même chanson dans plusieurs tonalités et garde celle où le plus aigu et le plus grave sont confortables. Tu changes seulement la note maison : les degrés et les accords (I, IV, V, vi) restent identiques.`,kb:(k,s)=>chordHL(k,s),demos:[dChords('Grille pop dans cette tonalité',[1,5,6,4],1.1)]}],
+   qs:[
+    {q:`Quelle gamme majeure n'a aucune touche noire ?`,o:[`{C}`,`{G}`,`{F}`,`{D}`],w:`La gamme de {C} : {C} {D} {E} {F} {G} {A} {B}, que des touches blanches.`},
+    {q:`Pour adapter une chanson à ta voix, que change-t-on ?`,o:[`La note maison : les degrés restent`,`Les degrés`,`Le rythme`,`Rien : on chante plus fort`],w:`On décale la note maison. La mélodie en degrés et les accords en chiffres romains ne bougent pas.`},
+    {q:`Combien de touches noires dans la gamme de {G} majeur ?`,o:[`1`,`0`,`2`,`3`],w:`{G} {A} {B} {C} {D} {E} {F#} : une seule touche noire, le {F#}.`},
+    {q:`En {F} majeur, quelle note remplace le {B} naturel ?`,o:[`{Bb}`,`{B}`,`{F#}`,`{A}`],w:`Pour garder la formule, le degré 4 de {F} majeur est {Bb} : {F} {G} {A} {Bb} {C} {D} {E}.`}]},
+  {id:'5a',t:'Sur deux octaves, ailleurs',type:'deg',set:[1,3,5],keys:'all',wide:true,intro:`Les notes peuvent maintenant sonner plus grave ou plus aigu. Un 3 reste un 3 : seule la hauteur change.`,tip:`Écoute bien la cadence : c'est elle qui te dit où est la maison.`},
+  {id:'5b',t:'Toute la gamme, deux octaves',type:'deg',set:[1,2,3,4,5,6,7],keys:'all',wide:true,intro:`Toute la gamme, graves et aigus, dans toutes les tonalités. C'est l'étape la plus délicate : sois patient.`,tip:`Un jour, les autres tonalités sonneront comme Do. C'est le signe que ton oreille relative est là.`},
+  {id:'5c',t:'Les accords, ailleurs',type:'chord',set:[1,4,5,6],keys:'all',intro:`I, IV, V et vi dans toutes les tonalités. C'est exactement ce qu'il faut pour accompagner une chanson dans ta voix.`,tip:`La basse reste ton meilleur indice.`},
+  {id:'5d',t:'Les grilles, ailleurs',type:'prog',len:4,set:[1,4,5,6],keys:'all',intro:`Des grilles de 4 accords dans toutes les tonalités.`,tip:`Une grille en Sol ou en Do a la même couleur : fie-toi aux degrés.`},
+  {id:'5e',t:'Les mélodies, ailleurs',type:'mel',len:4,set:[1,2,3,4,5,6,7],keys:'all',intro:`Des mélodies de 4 notes dans toutes les tonalités.`,tip:`Cherche la maison d'abord, puis les degrés.`},
+  {id:'5f',type:'kb',t:'Au clavier : ta tonalité',intro:`Trouve la tonalité qui convient à ta voix et joue dedans.`,steps:[`Choisis une tonalité avec les boutons : la gamme s'allume.`,`Joue la note maison et chante-la. Trop grave ou trop aigu ? Essaie une autre tonalité.`,`Joue la grille pop (I – V – vi – IV) dans la tonalité retenue.`,`Refais avec une deuxième tonalité.`],pick:true,kb:k=>scaleHL(k),demos:[dScale(),dChords('Grille pop',[1,5,6,4],1.1)],hint:`Une bonne tonalité de chant : le passage le plus aigu de la chanson reste confortable, sans forcer.`}]},
+ {id:'u6',title:'Oreille complète',goal:'Mélodie + accords',col:'var(--gold)',desc:"Le niveau des chansons pop réelles. Dernière étape avant l'objectif.",L:[
+  {id:'6a',keys:'all',t:'Les accords ii et iii',type:'chord',set:[1,2,3,4,5,6],intro:`Deux nouveaux mineurs : le <b>ii</b> (qui prépare le V) et le <b>iii</b>, plus rare. C'est le chapitre 4 de Hooktheory.`,tip:`Trois accords sont mineurs maintenant : ii, iii et vi. Écoute la basse pour les départager.`},
+  {id:'6b',t:'Grilles avec ii et iii',type:'prog',len:4,set:[1,2,3,4,5,6],keys:'all',intro:`Des grilles plus riches, comme I → vi → ii → V.`,tip:`ii → V → I est un enchaînement très courant : il sonne comme une arrivée.`},
+  {id:'6c',t:'Longues mélodies',type:'mel',len:6,set:[1,2,3,4,5,6,7],keys:'all',intro:`Six notes, dans toutes les tonalités. C'est la taille d'une vraie phrase de chanson.`,tip:`Découpe la phrase en deux morceaux de trois notes.`},
+    {id:'6e',type:'kb',t:'Au clavier : ta première chanson',intro:`Dernier défi : accompagne-toi sur une vraie chanson, à l'oreille.`,steps:[`Choisis une chanson simple que tu aimes (3 ou 4 accords).`,`Trouve sa note maison, puis ses accords à l'oreille : essaie I, IV, V et vi.`,`Joue la grille en boucle et chante par-dessus.`,`Ajoute la mélodie à la main droite, note par note. Compare avec TheoryTab si besoin.`],pick:true,kb:k=>scaleHL(k),demos:[dChords('Grille pop',[1,5,6,4],1.1),dChords('I – IV – V – I',[1,4,5,1],1)],hint:`Si tu bloques sur les accords, cherche d'abord la basse à chaque changement : c'est la note la plus grave.`},
+  {id:'6d',t:'Examen final',type:'mix',n:15,intro:`Un peu de tout : notes, accords, grilles et mélodies, dans toutes les tonalités. Réussis-le et tu atteins l'objectif.`,tip:`Prends ton temps, réécoute autant que nécessaire.`}]}];
+{const p1=U_P.L[0];p1.t='Le ♭VII, l\'accord rock';p1.pages.splice(1,1);const pg=p1.pages[1];
+ pg.h=`Le <b>♭VII</b> ajoute une couleur rock sans changer le rôle du I (la maison), du IV (on s'éloigne) ou du V (la tension) : il les colore.`;
+ pg.demos=[dChords('I – ♭VII – IV – I',[1,8,4,1],1.1),dChords('I – IV – V – I',[1,4,5,1],1.1)];
+ p1.qs=[p1.qs[0],p1.qs[2],{q:`En {D} majeur, quel est le ♭VII ?`,o:[`{C} majeur`,`{C#} majeur`,`{B}m`,`{G}`],w:`Un ton sous la maison : {D} → {C}. En {D} majeur, la grille I – ♭VII – IV donne {D} – {C} – {G}.`}];
+ U_P.desc='Un accord « emprunté » que l\'on entend partout dans le rock et la pop : le ♭VII.'}
+U_R.L.forEach(l=>{if(l.id==='r3')l.gen='e';if(l.id==='r6')l.gen='m'});
+U.splice(4,0,U_R);U.splice(7,0,U_P,U_M);
+const DROP=new Set(['1d', '1e', '1f', '1g', '5a', '5b', '5c', '5d', '5e', 'v1', 'v2', 'r2', 'r5', 'p4', 'm1', 'm2']);U.forEach(u=>{u.L=u.L.filter(l=>!DROP.has(l.id))});
+const LESSONS=[];U.forEach((u,ui)=>u.L.forEach(l=>{l.unit=ui;LESSONS.push(l)}));
+const LBY={};LESSONS.forEach(l=>{LBY[l.id]=l});
+const TXT={
+ '1a':{i:`Chaque question commence par 4 accords : la <b>cadence</b>. Elle installe la tonalité et finit sur la <b>maison</b>. Ensuite, une note sonne.<br><br><b>Méthode :</b> (1) chante dans ta tête la dernière note de la cadence : c'est le 1. (2) Écoute la note mystère. (3) Compare : sonne-t-elle comme la maison, posée, finie ? C'est le 1. Sonne-t-elle plus haute et plus ouverte, mais tu pourrais t'y arrêter ? C'est le 5.<br><br>La tonalité change à chaque question : tu ne peux pas retenir un son, seulement la place de la note par rapport à la maison.`,t:`Si tu hésites, chante la gamme depuis la maison : 1 – 2 – 3 – 4 – 5. Le 5 est la 5e note, tout en haut de l'accord de la maison.`},
+ '1b':{i:`1, 3 et 5 sont les trois notes de l'accord de la maison : ce sont les notes <b>stables</b>, celles sur lesquelles on peut s'arrêter.<br><br><b>Méthode :</b> d'abord, la note est-elle posée ? Oui : c'est 1, 3 ou 5. Pour trancher : le 1 est la maison (aucune envie de bouger), le 3 est lumineux, un peu « joyeux », le 5 est plus haut et plus ouvert.`,t:`Chante 1 – 2 – 3 – 4 – 5 depuis la maison : le 3 est la 3e note de la gamme, le 5 la 5e. Place la note mystère sur cette échelle.`},
+ '1c':{i:`Le 2 est la première note <b>instable</b> : il n'est pas dans l'accord de la maison.<br><br><b>Méthode :</b> si la note sonne en suspens (tu ne peux pas t'arrêter dessus), c'est une note instable. Ici, la seule candidate est le 2 : il est juste au-dessus de la maison, à un pas. Redescends d'un pas et tu y es.`,t:`Test de l'arrêt : arrête-toi sur la note. Si ça sonne coupé et que tu veux redescendre d'un pas, c'est le 2.`},
+ '2a':{t:`Méthode : écoute la note du milieu de l'accord. Majeur : claire et ouverte. Mineur : plus sombre, plus triste. Dans la correction, compare avec l'autre version.`},
+ '2b':{t:`Méthode : à la fin de l'accord, est-ce que tu te sens arrivé (I) ou en attente (V) ? La cadence t'a donné la maison : compare l'accord à elle.`},
+ '2c':{t:`Méthode en 2 temps : (1) posé ? C'est le I. (2) Sinon, le IV s'ouvre et s'éloigne en douceur, le V reste en attente et appelle le I.`},
+ '2d':{i:`On ajoute le <b>vi</b>, le seul mineur des quatre. I, IV, V et vi : les quatre accords de la plupart des chansons pop.`,t:`Méthode : (1) triste ? C'est le vi. (2) Sinon, posé ? C'est le I. (3) Ouvert et doux ? Le IV. (4) En attente ? Le V.`},
+ '3a':{t:`Méthode : le premier accord est le I. Compare le second à lui : triste (vi), ouvert et doux (IV) ou en attente (V) ?`},
+ '3b':{t:`Méthode : regarde le début et la fin. Début triste : « Zombie ». Fin posée sur la maison : I – IV – V – I. Fin ouverte (IV) : la grille pop. Fin en attente (V) avec un début posé : la grille des années 50.`},
+ '3c':{t:`Méthode : un accord à la fois. Le premier est le I. Pour chacun des suivants : triste → vi, ouvert → IV, en attente → V.`},
+ '3d':{t:`Méthode : repère le premier accord (posé = I, triste = vi) puis le dernier. Remplis ensuite le milieu, un accord à la fois, en réécoutant.`},
+ 'r3':{t:`Méthode : tape du pied à chaque temps (1, 2, 3, 4). Un coup qui tombe sur ton pied est sur un temps ; un coup entre deux battements est sur un « et ».`},
+ 'r6':{t:`Méthode : pendant les 4 clics, prends le tempo avec ton pied. Puis note où tombent les coups par rapport à lui.`},
+ '4a':{t:`Méthode : (1) retrouve la maison grâce à la cadence ; (2) la mélodie monte ou descend ? (3) de combien de pas ? Chante-la depuis la maison pour vérifier.`},
+ '4b':{t:`Méthode : sur un saut, la note d'arrivée est souvent stable (1, 3, 5) : essaie d'abord ces trois-là, puis les autres.`},
+ '4c':{t:`Méthode : coupe en deux : les 2 premières notes, puis les 2 dernières. Pour chacune, direction et nombre de pas par rapport à la précédente.`},
+ '4d':{t:`Méthode : trouve la 1re et la dernière note (la dernière est souvent stable : 1, 3 ou 5). Remplis ensuite le milieu en réécoutant.`},
+ 'p2':{t:`Méthode : le ♭VII est majeur et lumineux, avec une basse à un ton sous la maison. Compare-le au V : le V attend et appelle le I, le ♭VII s'ouvre, un peu rock.`},
+ 'p3':{t:`Méthode : repère où tombe l'accord « rock » : le ♭VII, souvent juste après la maison, comme un pas de côté.`},
+ 'm3':{t:`Méthode : d'abord majeur ou mineur ? (i et iv sont mineurs ; III, VI et VII sont majeurs.) Ensuite, compare la basse à la maison.`},
+ 'm4':{t:`Méthode : repère les accords mineurs (i, iv) et les majeurs (III, VI, VII), puis place-les dans l'ordre.`},
+ 'm5':{t:`Méthode : retrouve la maison (mineure), puis direction et pas. Si tu hésites, compare le 3, le 6 et le 7 à la gamme majeure : ils sont un demi-ton plus bas.`},
+ '6a':{i:`Deux nouveaux accords mineurs : le <b>ii</b> (qui prépare le V) et le <b>iii</b>, plus rare.`,t:`Méthode : triste ? Alors vi, ii ou iii. Compare la basse à la maison : est-elle au 2e, au 3e ou au 6e pas de la gamme ?`},
+ '6b':{t:`Méthode : ii → V → I est un enchaînement très courant, il sonne comme une arrivée. Cherche-le à la fin de la grille.`},
+ '6c':{t:`Méthode : découpe en deux morceaux de trois notes. Pour chaque note : direction et nombre de pas depuis la précédente.`},
+ '6d':{t:`Pour chaque question, identifie d'abord le type (une note, un accord, une grille, une mélodie), puis applique la méthode correspondante.`}};
+LESSONS.forEach(l=>{const t=TXT[l.id];if(t){if(t.i)l.intro=t.i;if(t.t)l.tip=t.t}});
+
+const EAR=l=>!['learn','kb','mix'].includes(l.type);
+const RANKS=['Débutant','Bases en poche','Oreille éveillée','Accompagnateur en herbe','Maître des grilles','Rythme en main','Chercheur de mélodies','Oreille voyageuse','Accompagnateur pop','Voix du mineur',"Musicien à l'oreille"];
+const BADGES=[
+ {id:'first',s:'1',t:'Première leçon',d:'Finir une leçon'},
+ {id:'perfect',s:'★',t:'Sans faute',d:'100 % à une leçon'},
+ {id:'learn1',s:'Aa',t:'Théorie',d:'Finir une leçon Comprendre'},
+ {id:'kb1',s:'♫',t:'Au clavier',d:'Réussir un défi clavier'},
+ {id:'kball',s:'♛',t:'Mains en or',d:'Tous les défis clavier'},
+ {id:'goal',s:'✓',t:'Objectif du jour',d:'Atteindre ton objectif'},
+ {id:'s3',s:'3',t:'3 jours de suite',d:'Série de 3 jours'},
+ {id:'s7',s:'7',t:'Une semaine',d:'Série de 7 jours'},
+ {id:'s30',s:'30',t:'Un mois',d:'Série de 30 jours'},
+ {id:'q100',s:'100',t:'100 réponses',d:'Répondre 100 fois'},
+ {id:'q500',s:'500',t:'500 réponses',d:'Répondre 500 fois'},
+ {id:'q1000',s:'1k',t:'1000 réponses',d:'Répondre 1000 fois'},
+ {id:'chal1',s:'♪',t:'Défi de la semaine',d:'Relever un défi de la semaine'},
+ {id:'chal4',s:'4',t:'Quatre défis',d:'Relever 4 défis de la semaine'},
+ ...U.map((u,i)=>({id:'u_'+u.id,s:'♪',t:u.title,d:'Finir l\'unité '+(i+1)}))];
+
+/* ===================== ÉTAT ===================== */
+const DEF={chal:null,chalDone:[],hist:{},mast:{},rec:{deg:{},chd:{}},plan:{d:'',rev:0,tr:0,nw:0},onboarded:false,minutes:10,notation:'fr',showNames:true,reminder:'19:00',free:false,xp:0,lessons:{},daily:{},streak:{n:0,last:null},stats:{c:0,t:0,deg:{},chd:{}},badges:[]};
+let S;
+try{const raw=JSON.parse(localStorage.getItem('oreillePop')||'{}');S={...structuredClone(DEF),...raw,stats:{...DEF.stats,...(raw.stats||{})},streak:{...DEF.streak,...(raw.streak||{})},rec:{deg:{},chd:{},...(raw.rec||{})}};}catch(e){S=structuredClone(DEF)}
+function save(){S.upd=Date.now();try{localStorage.setItem('oreillePop',JSON.stringify(S))}catch(e){}syncPush()}
+const dayKey=(d=new Date())=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const yesterday=()=>{const d=new Date();d.setDate(d.getDate()-1);return dayKey(d)};
+const goalQ=()=>S.minutes*4;
+const todayCount=()=>S.daily[dayKey()]||0;
+function streakNow(){const l=S.streak.last;return (l===dayKey()||l===yesterday())?S.streak.n:0}
+function passed(id){const r=S.lessons[id];if(!r)return false;const l=LBY[id];return (l&&(l.type==='learn'||l.type==='kb'))?!!r.done:(r.best||0)>=80}
+function unlocked(i){if(S.free||i===0)return true;const p=LESSONS[i-1];return passed(p.id)||((p.type==='kb'||p.opt)&&unlocked(i-1))}
+function unitDone(ui){return U[ui].L.filter(l=>l.type!=='kb'&&!l.opt).every(l=>passed(l.id))}
+function checkUnits(){U.forEach((u,ui)=>{if(unitDone(ui))award('u_'+u.id)})}
+function rankIdx(){let n=0;for(let i=0;i<U.length;i++){if(unitDone(i))n=i+1;else break}return n}
+function level(){let x=S.xp,l=1,need=100;while(x>=need){x-=need;l++;need=100+(l-1)*60}return{l,cur:x,need}}
+
+/* ===================== NOMS ===================== */
+function fmt(n){const acc=n.slice(1).replace('#','♯').replace('b','♭');return (S.notation==='fr'?FR[n[0]]:n[0])+acc}
+const keyName=k=>fmt(k.notes[0])+(k.m?' mineur':' majeur');
+const noteName=(k,d)=>d===8?fmt(B7[k.id]||k.notes[6]):d===9?fmt(k.notes[4]):fmt(k.notes[(d-1)%7]);
+function chordName(k,d){if(d===8)return fmt(B7[k.id]);if(d===9)return fmt(k.notes[4])+'7';const q=QL(k)[d-1];return fmt(k.notes[d-1])+(q==='m'?'m':q==='d'?'dim':'')}
+
+/* ===================== AUDIO ===================== */
+let AC,master,bus;
+function audio(){if(!AC){AC=new (window.AudioContext||window.webkitAudioContext)();const comp=AC.createDynamicsCompressor();master=AC.createGain();master.gain.value=.55;master.connect(comp);comp.connect(AC.destination)}if(AC.state==='suspended')AC.resume();return AC}
+const mtof=m=>440*Math.pow(2,(m-69)/12);
+function newBus(){audio();if(bus){const b=bus;try{b.gain.setTargetAtTime(0,AC.currentTime,.03)}catch(e){}setTimeout(()=>{try{b.disconnect()}catch(e){}},400)}bus=AC.createGain();bus.connect(master);return AC.currentTime+.08}
+function tone(m,t,dur=1.2,vel=.6){const f=mtof(m);const g=AC.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vel,t+.008);g.gain.exponentialRampToValueAtTime(vel*.35,t+.3);g.gain.exponentialRampToValueAtTime(.0008,t+dur);const lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.setValueAtTime(Math.min(9000,f*9),t);lp.frequency.exponentialRampToValueAtTime(Math.max(f*1.6,320),t+dur);lp.connect(g);g.connect(bus);[[1,1],[2,.42],[3,.2],[4,.1],[5,.05]].forEach(([h,a],i)=>{const o=AC.createOscillator();o.type=i===0?'triangle':'sine';o.frequency.value=f*h*(1+.0008*i);const og=AC.createGain();og.gain.value=a*.26;o.connect(og);og.connect(lp);o.start(t);o.stop(t+dur+.05)})}
+function tonic(k){let m=60+k.semi;if(m>66)m-=12;return m}
+function degMidi(k,d,o=0){return tonic(k)+SC(k)[(d-1)%7]+12*(Math.floor((d-1)/7)+o)}
+function chordMidis(k,d){const sc=SC(k),t0=tonic(k);let tri,r;
+ if(d>7){const rs=d===8?10:7,iv=d===9?[0,4,7,10]:[0,4,7];tri=iv.map(x=>t0+rs+x);r=t0+rs}
+ else{tri=[0,2,4].map(i=>{const dd=d-1+i;return t0+sc[dd%7]+12*Math.floor(dd/7)});r=t0+sc[d-1]}
+ while(Math.min(...tri)>62)tri=tri.map(x=>x-12);while(Math.min(...tri)<53)tri=tri.map(x=>x+12);while(r>47)r-=12;while(r<36)r+=12;return{bass:r,tri}}
+function playChord(c,t,dur=.8,vel=.5){tone(c.bass,t,dur+.5,vel*.85);c.tri.forEach(m=>tone(m,t,dur+.5,vel*.5))}
+function cadence(k,t){(k.m?[1,4,10,1]:[1,4,5,1]).forEach((d,i)=>playChord(chordMidis(k,d),t+i*.55,.5,.45));return t+4*.55+.4}
+let playTimer;
+function markPlaying(sec){const q=document.querySelector('.quizwrap');if(!q)return;q.classList.add('playing');clearTimeout(playTimer);playTimer=setTimeout(()=>q.classList.remove('playing'),sec*1000)}
+function playQ(q,withCad=true){if(q.type==='rhy'){markPlaying(playPat(q.pat,q.chord));return}CK=q.key;let t=newBus(),t0=t;const k=q.key;
+ if(q.type==='qual'){playChord(q.chord,t,1.4,.55);t+=1.6}
+ else if(q.type==='progid'){q.seq.forEach((d,i)=>playChord(chordMidis(k,d),t+i*1,.9,.5));t+=q.seq.length}
+ else{ if(withCad)t=cadence(k,t);
+  if(q.type==='deg'){tone(degMidi(k,q.ans,q.oct),t,1.8,.7);t+=1.2}
+  else if(q.type==='mel'){q.ans.forEach((d,i)=>tone(degMidi(k,d),t+i*.6,.9,.65));t+=q.ans.length*.6}
+  else if(q.type==='chord'){playChord(chordMidis(k,q.ans),t,1.4,.55);t+=1.4}
+  else if(q.type==='prog'){q.ans.forEach((d,i)=>playChord(chordMidis(k,d),t+i*1,.9,.5));t+=q.ans.length}}
+ markPlaying(t-t0)}
+function playDeg(k,d,o=0,res=false,withCad=false){let t=newBus();if(withCad)t=cadence(k,t);tone(degMidi(k,d,o),t,1.2,.7);if(res){const path=RES[d];path.slice(1).forEach((x,i)=>tone(degMidi(k,x,o),t+.55+i*.38,i===path.length-2?1.4:.6,.6))}}
+function playChordSolo(k,d,withCad=false){let t=newBus();if(withCad)t=cadence(k,t);playChord(chordMidis(k,d),t,1.4,.55)}
+function playSeq(k,seq,kind){let t=newBus();t=cadence(k,t);seq.forEach((d,i)=>kind==='mel'?tone(degMidi(k,d),t+i*.6,.9,.65):playChord(chordMidis(k,d),t+i,.9,.5))}
+
+/* ===================== GÉNÉRATION ===================== */
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+let lastAns=null,lastAns2=null;function pickAns(set){let a=pick(set);if(set.length>1&&a===lastAns&&a===lastAns2)a=pick(set.filter(x=>x!==a));lastAns2=lastAns;lastAns=a;return a}
+function keyFor(l){const K=l.minor?MKEYS:KEYS;if(l.keys==='notC')return pick(K.slice(1));if(l.keys==='all')return pick(K);return K[0]}
+function gen(l){
+ if(l.type==='mix'){const pool=LESSONS.filter(x=>EAR(x)&&x.unit>=2&&x.type!=='rhy'&&!x.minor&&!(x.set||[]).some(d=>d>7));const src=pick(pool);const mq=gen({...src,keys:'all',id:l.id,t:l.t,src:src.t});mq.lid=src.id;return mq}
+ const k=keyFor(l);const q={type:l.type,key:k,lesson:l,lid:l.id};
+ if(l.type==='deg'){q.ans=pickAns(l.set);q.oct=l.wide?pick([-1,0,0]):0;q.opts=l.set}
+ else if(l.type==='chord'){q.ans=pickAns(l.set);q.opts=l.set}
+ else if(l.type==='qual'){q.min=Math.random()<.5;const r=52+Math.floor(Math.random()*10);q.chord={bass:r-12,tri:[r,r+(q.min?3:4),r+7]};q.ans=q.min}
+ else if(l.type==='mel'){q.ans=genMel(l.set,l.len,l.step);q.opts=l.set}
+ else if(l.type==='prog'){q.opts=l.set;if(l.len===4){let ok=(l.minor?PROG4M:PROG4).filter(p=>p.every(d=>l.set.includes(d)));const mx=Math.max(...l.set);if(mx>7){const w=ok.filter(p=>p.includes(mx));if(w.length)ok=w}q.ans=pick(ok).slice()}else{const s=[1];while(s.length<l.len){s.push(pick(l.set.filter(d=>d!==s[s.length-1])))}q.ans=s}}
+ else if(l.type==='rhy'){genRhy(l,q)}
+ else if(l.type==='progid'){q.idx=Math.floor(Math.random()*FAMOUS.length);q.seq=FAMOUS[q.idx].p;q.ans=q.idx}
+ return q}
+function genMel(set,len,step){const st=[1,3,5].filter(x=>set.includes(x));let cur=pick(st);const s=[cur];while(s.length<len){let o=set.filter(x=>x!==cur&&(!step||Math.abs(x-cur)<=2));if(!o.length)o=set.filter(x=>x!==cur);cur=pick(o);s.push(cur)}return s}
+
+/* ===================== ICÔNES ===================== */
+const I={
+ play:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.4-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>',
+ flame:'<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2c1 3.5-1.6 5.3-2.6 7.2C8.2 11.5 8.6 14 10.5 15c-.5-1.8.4-3.3 1.8-4.3.2 2 1.8 2.9 2.6 4.3.9 1.6.4 3.5-.7 4.6 3-.6 5.3-3.2 5.3-6.4C19.5 8.6 15.5 5 12 2zM8 13.6c-1.3 1.2-2 2.7-2 4.2C6 20.6 8.5 22 11.2 22 8.3 21.1 7.2 17.6 8 13.6z"/></svg>',
+ star:c=>`<svg viewBox="0 0 24 24" fill="${c}"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.5 1.2 6.4L12 17.3l-5.7 3.1 1.2-6.4L2.8 9.5l6.4-.8z"/></svg>`,
+ close:'<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+ lock:'<svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M7 10V8a5 5 0 0 1 10 0v2h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1zm2 0h6V8a3 3 0 0 0-6 0z"/></svg>',
+ path:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M8.5 17c6 0 2-10 7-10.5"/></svg>',
+ chart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 20V11M12 20V5M19 20v-6"/></svg>',
+ gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>',
+ crown:'<svg viewBox="0 0 24 24" width="40" height="40" fill="#251a00"><path d="M3 8l4.5 3.5L12 5l4.5 6.5L21 8l-2 10H5z"/></svg>',
+ book:'<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M3 5.5c3-1 6-.8 9 1 3-1.8 6-2 9-1V19c-3-1-6-.8-9 1-3-1.8-6-2-9-1z"/><path d="M12 6.5V20"/></svg>',
+ keys:'<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M9 5v14M15 5v14"/><path d="M7.5 5v7M13.5 5v7M19.5 5v0" stroke-width="3.2"/></svg>'};
+
+/* ===================== RENDU ===================== */
+const app=document.getElementById('app');
+let view='home';
+function tabs(cur){return `<nav class="tabs" aria-label="Navigation"><div class="in">
+ <button class="tab" data-go="home" aria-current="${cur==='home'}">${I.path}Parcours</button>
+ <button class="tab" data-go="train" aria-current="${cur==='train'}">${I.train}Entraîner</button>
+ <button class="tab" data-go="progress" aria-current="${cur==='progress'}">${I.chart}Progrès</button>
+ <button class="tab" data-go="settings" aria-current="${cur==='settings'}">${I.gear}Réglages</button></div></nav>`}
+function topbar(){const lv=level();return `<div class="topbar"><span class="pill"><span class="flame">${I.flame}</span>${streakNow()} j</span><span class="pill" style="color:var(--gold)">Niv. ${lv.l} · ${S.xp} XP</span><span class="pill">${RANKS[rankIdx()]}</span></div>`}
+function ring(v,max){const p=Math.min(1,v/max),r=34,c=2*Math.PI*r;return `<svg class="ring" viewBox="0 0 82 82"><circle cx="41" cy="41" r="${r}" fill="none" stroke="var(--surface2)" stroke-width="10"/><circle cx="41" cy="41" r="${r}" fill="none" stroke="${p>=1?'var(--good)':'var(--accent)'}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${c*(1-p)}" transform="rotate(-90 41 41)"/><text x="41" y="47" text-anchor="middle" fill="var(--fg)" font-family="Bricolage Grotesque, sans-serif" font-weight="800" font-size="18">${Math.round(p*100)}%</text></svg>`}
+function starRow(n,size=''){return `<span class="stars">${[0,1,2].map(i=>I.star(i<n?'var(--gold)':'var(--surface2)')).join('')}</span>`}
+
+function renderHome(){view='home';const tc=todayCount(),g=goalQ();
+ const curIdx=LESSONS.findIndex((l,i)=>unlocked(i)&&!passed(l.id)&&!l.opt);
+ const offs=[0,48,72,48,0,-48,-72,-48];
+ let html=topbar()+`<div class="stack">
+ <div class="card daily">${ring(tc,g)}<div class="stack" style="gap:8px"><div><div class="eyebrow">Objectif du jour · ${S.minutes} min</div><h3>${tc>=g?'Objectif atteint, bravo !':`${tc} / ${g} réponses`}</h3></div><button class="btn" data-act="daily">Séance du jour</button></div></div>${chalCard()}
+ <div class="card goalcard stack" style="gap:8px"><div class="eyebrow">Objectif final</div><h2>${RANKS[U.length]}</h2><p class="muted small">Retrouver la mélodie et les accords d'une chanson pop simple, dans n'importe quelle tonalité, pour la jouer et t'accompagner au chant. Tu y arrives avec la théorie (Comprendre), l'oreille et des défis au clavier.</p><div class="row small"><span class="muted">${LESSONS.filter(l=>passed(l.id)).length} / ${LESSONS.length} leçons réussies</span></div></div></div>`;
+ U.forEach((u,ui)=>{html+=`<section class="unit"><div class="unithead" style="background:${u.col}"><div class="eyebrow">Unité ${ui+1} · ${u.goal}</div><h3>${u.title}</h3><p class="small" style="color:rgba(18,15,34,.8)">${u.desc}</p></div><div class="path">`;
+  u.L.forEach((l,li)=>{const gi=LESSONS.indexOf(l),un=unlocked(gi),st=S.lessons[l.id]?.stars||0,isCur=gi===curIdx,fin=l.type==='mix';
+   html+=`<div class="node ${fin?'final':''}" style="transform:translateX(${offs[gi%8]}px)"><button class="bubble ${un?'':'locked'} ${isCur?'current':''}" style="background:${fin?'var(--gold)':u.col}" data-lesson="${l.id}" aria-label="${l.t}${un?'':' (verrouillée)'}">${un?(fin?I.crown:l.type==='learn'?I.book:l.type==='kb'?I.keys:(li+1)):I.lock}</button>${starRow(st)}${l.opt?'<span class="tag">Facultatif</span>':l.type==='learn'?'<span class="tag">Comprendre</span>':l.type==='kb'?'<span class="tag">Au clavier</span>':''}<span class="lt ${un?'':'muted'}">${tx(l.t)}</span></div>`});
+  html+=`</div></section>`});
+ app.innerHTML=html+tabs('home');
+ const cur=app.querySelector('.bubble.current');if(cur&&!renderHome.scrolled){renderHome.scrolled=true;setTimeout(()=>cur.scrollIntoView({block:'center'}),60)}}
+
+const WHY={"b1": ["Savoir où sont les 12 notes et comment le clavier se répète.", "Sans ça, impossible de te repérer sur n'importe quel piano ou clavier."], "b2": ["Comprendre la gamme majeure : 7 notes qui donnent le « son » d'une chanson.", "Presque toutes les chansons pop sont construites sur une gamme : c'est le décor de tout ce qui suit."], "b3": ["Numéroter les notes de 1 à 7 au lieu de les nommer.", "Un numéro marche dans toutes les tonalités : tu peux jouer une chanson plus haut ou plus bas sans tout réapprendre."], "b4": ["Jouer la gamme majeure au clavier, dans le bon ordre.", "C'est la base de tes mains : toutes les mélodies sortent de cette gamme."], "1a": ["Reconnaître si une note est posée (le 1, la maison) ou plus haute et ouverte (le 5).", "Quand tu fredonnes une chanson, tu sens où elle se pose : c'est ça que tu apprends à nommer. Sans la maison, tu ne peux pas retrouver la tonalité d'un morceau."], "1b": ["Distinguer les 3 notes stables : 1, 3, 5.", "Ce sont les notes sur lesquelles une mélodie peut s'arrêter : repère-les, et tu sais où une phrase se termine."], "1c": ["Reconnaître le 2, qui veut retomber.", "Dans une mélodie, le 2 est souvent un passage : savoir qu'il retombe sur le 1 t'aide à deviner la note suivante."], "rp": ["Associer chaque degré à une chanson que tu connais.", "Quand tu entends une note inconnue, tu la compares à un air en tête. C'est la méthode que les musiciens à l'oreille utilisent vraiment."], "1h": ["Trouver 1 – 3 – 5 au clavier.", "Ces trois notes forment l'accord de la maison : tu le joueras sous presque toutes les chansons."], "c1": ["Savoir construire un accord à 3 notes.", "Pour accompagner ta voix, tu dois fabriquer un accord toi-même, pas le copier d'un tableau."], "2a": ["Entendre si un accord est majeur (clair) ou mineur (sombre).", "C'est la première chose que tu perçois en écoutant les accords d'une chanson : triste ou lumineuse."], "c2": ["Voir quels accords existent dans une tonalité : I, IV, V, vi…", "Quand tu veux accompagner une chanson, tu choisis tes accords dans cette liste. Elle te dit où chercher."], "2b": ["Distinguer l'accord de la maison de l'accord de tension.", "Dans une chanson, la tension précède le retour à la maison : c'est ce qui fait « on attend la suite »."], "2c": ["Reconnaître I, IV et V.", "Ces 3 accords suffisent pour accompagner des centaines de chansons."], "2d": ["Ajouter le vi : les 4 accords de la pop.", "Avec ces 4 accords, tu couvres une très grande partie de la pop actuelle."], "2e": ["Jouer I – IV – V au clavier.", "Tes mains apprennent à passer d'un accord à l'autre : c'est la base pour t'accompagner."], "3a": ["Entendre le passage d'un accord à un autre.", "Jouer une chanson, c'est enchaîner des accords : ici tu entends les enchaînements."], "d1": ["Comprendre pourquoi certaines grilles sonnent bien.", "Quand tu devines la suite d'une grille, c'est parce que tu connais ces règles."], "3b": ["Reconnaître les grilles célèbres.", "Beaucoup de chansons partagent la même grille : l'identifier te donne les accords d'un coup."], "3c": ["Retrouver 3 accords à la suite.", "C'est ce que tu fais en relevant une chanson : écouter, noter les accords un par un."], "3d": ["Retrouver une grille de 4 accords.", "La plupart des couplets et refrains sont des boucles de 4 accords : c'est ta compétence principale."], "3e": ["Jouer la grille pop au clavier.", "Tu t'accompagnes avec la grille, en boucle : c'est ce que tu feras en chantant."], "r1": ["Sentir la pulsation et les « et ».", "Un accord joué n'importe comment sonne faux : le rythme fait que ça sonne comme une chanson."], "r3": ["Reconnaître des rythmes de temps et de « et ».", "Tu écoutes une chanson et tu sais comment la main droite frappe les accords."], "r4": ["Comprendre syncopes et motifs.", "Ce sont les rythmes de la pop : sans eux, ton accompagnement sonne comme un exercice."], "r6": ["Reconnaître un motif d'accompagnement sur des accords.", "Tu entends comment les accords sont joués dans une chanson et tu peux les reproduire."], "r7": ["Jouer un accord en rythme.", "Tu apprends à garder le rythme avec les mains, comme pour t'accompagner au chant."], "e1": ["Comprendre comment une mélodie monte, descend ou reste.", "C'est la première chose qui te permet de la retrouver à l'oreille : suivre sa direction."], "4a": ["Retrouver une mélodie de 3 notes par pas.", "Pour jouer une chanson à l'oreille, tu retrouves ses notes une par une, en commençant par les phrases courtes."], "4b": ["Retrouver 3 notes quand elles sautent.", "Les vraies mélodies ne bougent pas qu'à côté : elles sautent."], "4c": ["Retrouver 4 notes.", "Une phrase de chanson fait souvent 4 à 6 notes : tu t'en rapproches."], "4d": ["Retrouver une phrase de 5 notes.", "C'est la taille d'un début de refrain : tu peux le jouer à l'oreille."], "4e": ["Retrouver le début d'une chanson que tu connais.", "C'est l'objectif final : jouer sans partition."], "f1": ["Connaître les tonalités principales.", "Une chanson est écrite dans une tonalité : tu dois la trouver pour jouer les bonnes notes."], "5f": ["Trouver la tonalité d'une chanson au clavier.", "Tu chantes ta chanson, tu cherches la maison au clavier, et le reste suit."], "p1": ["Découvrir le ♭VII.", "C'est l'accord de très nombreux morceaux rock et pop : tu le reconnaîtras."], "p2": ["Reconnaître le ♭VII parmi d'autres accords.", "Dans une chanson, un accord « étrange » mais familier est souvent ce ♭VII."], "p3": ["Retrouver des grilles avec ♭VII.", "Tu peux relever des chansons rock avec ce que tu as appris."], "p5": ["Jouer I – ♭VII – IV.", "Cette boucle accompagne beaucoup de chansons à la guitare et au piano."], "m0": ["Comprendre le mode mineur.", "Une chanson triste est souvent en mineur : tu dois connaître ses accords."], "m3": ["Reconnaître les accords du mineur.", "Pour accompagner une chanson en mineur, tu dois savoir quels accords utiliser."], "m4": ["Retrouver des grilles en mineur.", "Tu relèves les chansons mélancoliques."], "m5": ["Retrouver des mélodies en mineur.", "Tu peux jouer à l'oreille les mélodies sombres, pas seulement les claires."], "mk": ["Jouer le mode mineur au clavier.", "Tes mains connaissent les deux « couleurs » : clair et sombre."], "6a": ["Ajouter les accords ii et iii.", "Ils apparaissent dans de nombreuses chansons : tu entends enfin des grilles plus riches."], "6b": ["Retrouver des grilles avec ii et iii.", "Tu relèves des chansons moins basiques."], "6c": ["Retrouver de longues mélodies.", "C'est la taille d'un vrai couplet."], "6e": ["Jouer ta première chanson complète.", "Tu mets tout ensemble : accords, rythme, voix."], "6d": ["Tester tout ce que tu sais.", "Si tu réussis, tu sais écouter une chanson et en trouver les accords et la mélodie."]};
+function whyHTML(id){const w=WHY[id];return w?`<div class="card why" style="gap:4px;display:grid"><div class="small"><b>Objectif.</b> ${w[0]}</div><div class="small"><b>Dans la vraie vie.</b> ${w[1]}</div></div>`:''}
+function renderIntro(id){const l=LESSONS.find(x=>x.id===id),gi=LESSONS.indexOf(l);
+ if(!unlocked(gi)){toast('Réussis la leçon précédente à 80 % pour débloquer celle-ci');return}
+ view='intro';const u=U[l.unit],k=l.minor?MKEYS[0]:KEYS[0];CK=k;CHL=l;
+ let ex='';
+ if(l.type==='deg')ex=l.set.map(d=>`<button class="lbtn" data-ex="deg" data-d="${d}">${I.play}${d}${S.showNames?' · '+noteName(k,d):''}</button>`).join('');
+ if(l.type==='chord')ex=l.set.map(d=>`<button class="lbtn" data-ex="chord" data-d="${d}">${I.play}${RR()[d-1]}${S.showNames?' · '+chordName(k,d):''}</button>`).join('');
+ if(l.type==='rhy')ex=l.pats.slice(0,3).map((p,i)=>`<button class="lbtn" data-ex="rhy" data-d="${i}">${I.play}Exemple ${i+1}</button>`).join('');
+ if(l.type==='qual')ex=`<button class="lbtn" data-ex="maj">${I.play}Majeur</button><button class="lbtn" data-ex="min">${I.play}Mineur</button>`;
+ if(l.type==='progid')ex=FAMOUS.map((f,i)=>`<button class="lbtn" data-ex="fam" data-d="${i}">${I.play}${f.p.map(d=>RR()[d-1]).join('–')}</button>`).join('');
+ app.innerHTML=`<div class="qtop"><button class="xbtn" data-go="home" aria-label="Fermer">${I.close}</button><span class="eyebrow">Unité ${l.unit+1} · ${u.title}</span></div>
+ <div class="stack intro"><h1>${l.t}</h1><p>${l.intro}</p>${whyHTML(l.id)}${ex?`<div class="stack" style="gap:8px"><div class="eyebrow">Écoute avant de commencer${l.type==='deg'||l.type==='chord'?' (en '+keyName(k)+', avec la cadence)':''}</div><div class="lbtns">${ex}</div></div>`:''}
+ ${l.type==='deg'&&!l.minor?`<div class="stack" style="gap:8px"><div class="eyebrow">L'échelle des notes</div><div class="vis">${ladderHTML(0,0)}<p class="small muted">Touche une marche pour l'entendre et voir où elle retombe. Marches pleines : notes posées (1, 3, 5). Marches en pointillés : notes en suspens (2, 4, 6, 7). La bille montre le chemin vers la maison.</p></div></div>`:''}${l.type==='deg'&&!l.minor?repBlock(l.set):''}<div class="tip"><b>Astuce.</b> ${l.tip}</div>
+ <p class="muted small">${l.n||10} questions · réussite à 80 % pour débloquer la suite${S.lessons[l.id]?.best!=null?` · ton meilleur score : ${S.lessons[l.id].best} %`:''}</p>
+ <button class="btn" data-start="${l.id}">Commencer</button></div>`}
+
+/* ===================== QUIZ ===================== */
+let Q=null;
+function startQuiz(lessonOrDaily){
+ let qs=[],title,lesson=null;
+ if(lessonOrDaily==='daily'){title='Séance du jour';const un=LESSONS.filter((l,i)=>unlocked(i)&&EAR(l));const fr=un.filter(l=>!passed(l.id)).slice(0,1);const front=fr.length?fr[0]:un[un.length-1];
+  for(let i=0;i<10;i++){const l=i%2===0?front:pick(un);const q=gen(l);q.src=l.t;qs.push(q)}}
+ else{lesson=LESSONS.find(x=>x.id===lessonOrDaily);title=lesson.t;for(let i=0;i<(lesson.n||10);i++)qs.push(gen(lesson))}
+ lastAns=null;Q={qs,i:0,ok:0,combo:0,xp:0,title,lesson,input:[],answered:false};renderQ()}
+function renderQ(){view='quiz';const q=Q.qs[Q.i],k=q.key;CK=k;Q.input=[];Q.answered=false;
+ const prompts={deg:'Quel degré as-tu entendu ?',mel:'Retrouve la mélodie, note par note',chord:'Quel accord as-tu entendu ?',qual:'Majeur ou mineur ?',prog:"Retrouve la grille d'accords",progid:'Quelle grille célèbre est-ce ?',rhy:'Quel rythme as-tu entendu ?'};
+ let ans='';
+ if(q.type==='deg'||q.type==='mel'){ans=`<div class="answers deg">${q.opts.map(d=>`<button class="ans" data-a="${d}" style="border-color:${DCOL[d]}"><b style="color:${DCOL[d]}">${d}</b>${S.showNames?`<span>${noteName(k,d)}</span>`:''}</button>`).join('')}</div>`}
+ else if(q.type==='chord'||q.type==='prog'){ans=`<div class="answers chd">${q.opts.map(d=>`<button class="ans" data-a="${d}" style="border-color:${DCOL[d]}"><b style="color:${DCOL[d]}">${RR()[d-1]}</b>${S.showNames?`<span>${chordName(k,d)}</span>`:''}</button>`).join('')}</div>`}
+ else if(q.type==='qual'){ans=`<div class="answers chd"><button class="ans" data-a="maj"><b>Majeur</b><span>lumineux</span></button><button class="ans" data-a="min"><b>Mineur</b><span>sombre</span></button></div>`}
+ else if(q.type==='progid'){ans=`<div class="answers list">${FAMOUS.map((f,i)=>`<button class="ans long" data-a="${i}"><b>${f.p.map(d=>RR()[d-1]).join(' – ')}</b><span>${f.nick}</span></button>`).join('')}</div>`}
+ if(q.type==='rhy')ans=`<div class="answers list">${q.opts.map((p,i)=>`<button class="ans long rgans" data-a="${i}">${rgHTML(p)}</button>`).join('')}</div>`;
+ const seq=(q.type==='mel'||q.type==='prog');
+ app.innerHTML=`<div class="quizwrap"><div class="qtop"><button class="xbtn" data-act="quit" aria-label="Quitter">${I.close}</button><div class="bar"><i style="width:${(Q.practice?(Q.i%10)/10:Q.i/Q.qs.length)*100}%"></i></div><span class="pill" style="color:var(--accent)">${I.flame}${Q.combo}</span></div>
+ <div class="prompt"><span class="eyebrow">${q.src?q.src+' · ':''}${q.type==='qual'||q.type==='progid'||q.type==='rhy'?'':'Tonalité : '+keyName(k)}</span><h2>${prompts[q.type]}</h2></div>
+ <button class="playbig" data-act="replay" aria-label="Réécouter">${I.play}</button>
+ <div class="lbtns" style="justify-content:center">${q.type!=='qual'&&q.type!=='progid'&&q.type!=='rhy'?`<button class="lbtn" data-act="cad">${I.play}Cadence seule</button>`:''}${q.type==='deg'||q.type==='mel'?`<button class="lbtn" data-act="tonic">${I.play}Note maison (1)</button>`:''}</div>
+ ${seq?`<div class="slots">${q.ans.map((_,i)=>`<div class="slot" data-slot="${i}">${q.type==='prog'&&i===0&&q.lesson.len<4?'':''}</div>`).join('')}</div><div class="lbtns" style="justify-content:center;margin-top:8px"><button class="lbtn" data-act="undo">Effacer la dernière</button></div>`:''}
+ ${ans}</div>`;
+ setTimeout(()=>playQ(q),250)}
+function updateSlots(){const q=Q.qs[Q.i];app.querySelectorAll('.slot').forEach((s,i)=>{const v=Q.input[i];if(v!=null){s.textContent=q.type==='prog'?RR()[v-1]:v;s.classList.add('f');s.style.background=DCOL[v]}else{s.textContent='';s.classList.remove('f');s.style.background=''}})}
+function answer(raw){if(Q.answered)return;const q=Q.qs[Q.i];
+ if(q.type==='mel'||q.type==='prog'){Q.input.push(+raw);updateSlots();const d=+raw;q.type==='mel'?(()=>{const t=newBus();tone(degMidi(q.key,d),t,.8,.6)})():(()=>{const t=newBus();playChord(chordMidis(q.key,d),t,.6,.45)})();if(Q.input.length<q.ans.length)return;return check(Q.input.slice())}
+ const v=q.type==='qual'?raw==='min':+raw;check(v)}
+function check(v){const q=Q.qs[Q.i];Q.answered=true;let ok;
+ if(Array.isArray(q.ans))ok=v.every((x,i)=>x===q.ans[i]);else ok=v===q.ans;
+ q.given=v;q.ok=ok;
+ // stats
+ S.stats.t++;if(ok)S.stats.c++;
+ const bump=(o,key)=>{o[key]=o[key]||{c:0,t:0};o[key].t++;if(ok)o[key].c++};
+ if(q.type==='deg')bump(S.stats.deg,q.ans);if(q.type==='chord')bump(S.stats.chd,q.ans);
+ if(q.type==='mel')q.ans.forEach((d,i)=>{S.stats.deg[d]=S.stats.deg[d]||{c:0,t:0};S.stats.deg[d].t++;if(v[i]===d)S.stats.deg[d].c++});
+ const hd=S.hist[dayKey()]||(S.hist[dayKey()]={n:0,c:0});hd.n++;if(ok)hd.c++;
+ if(q.lid){const ma=S.mast[q.lid]||(S.mast[q.lid]=[]);ma.push(ok?1:0);if(ma.length>20)ma.shift()}
+ const rc=(o,key,r)=>{const a=o[key]||(o[key]=[]);a.push(r?1:0);if(a.length>12)a.shift()};
+ if(q.type==='deg')rc(S.rec.deg,q.ans,ok);else if(q.type==='chord')rc(S.rec.chd,q.ans,ok);
+ else if(q.type==='mel')q.ans.forEach((d,i)=>rc(S.rec.deg,d,v[i]===d));else if(q.type==='prog')q.ans.forEach((d,i)=>rc(S.rec.chd,d,v[i]===d));
+ if(Q.practice)planNow().tr++;
+ if(ok){Q.ok++;Q.combo++;Q.best=Math.max(Q.best||0,Q.combo);const gain=10+Math.min(Q.combo,5)*2;Q.xp+=gain;S.xp+=gain}else Q.combo=0;
+ tickDaily();
+ if(S.stats.t>=100)award('q100');if(S.stats.t>=500)award('q500');if(S.stats.t>=1000)award('q1000');
+ save();
+ if(Array.isArray(q.ans))app.querySelectorAll('.slot').forEach((s,i)=>s.classList.add(v[i]===q.ans[i]?'ok':'ko'));
+ showFeedback(q,ok)}
+
+/* ===================== EXPLICATIONS ===================== */
+let FB={};
+function chip(d,kind){return `<span class="chip" style="background:${DCOL[d]}">${kind==='chd'?RR()[d-1]:d}</span>`}
+function explain(q,ok){const k=q.key,v=q.given;CK=k;FB={};let h='',btn='';
+ const nm=d=>S.showNames?` (${noteName(k,d)})`:'';const cn=d=>S.showNames?` (${chordName(k,d)})`:'';
+ if(q.type==='deg'){const d=q.ans,a=v;
+  FB.c=()=>playDeg(k,d,q.oct,true,true);FB.x=()=>cycleAlt('d',d);FB.y=()=>playDeg(k,a,q.oct,true,true);
+  h=ok?`<p>C'était bien <b>${DG()[d].n}</b>${nm(d)}. <span id="alt">${expl('d',d)}</span></p><p class="muted small">Écoute : ${resTxt(d)}. Chante-le.</p>`
+   :`<p>C'était <b>${DG()[d].n}</b>${nm(d)}, pas le ${a}.</p><p id="alt">${expl('d',d)}</p><p class="muted">Le ${a}, lui : ${DG()[a].t.charAt(0).toLowerCase()+DG()[a].t.slice(1)}</p><p class="small">${contrastD(d,a)}</p>`;
+  btn=`<button class="lbtn" data-fb="c">${I.play}Le ${d} (bonne réponse)</button>${ok?'':`<button class="lbtn" data-fb="y">${I.play}Le ${a} (ta réponse)</button>`}`;
+  h=`<div class="vis">${ladderHTML(d,ok?0:a)}<p class="small muted">Marches pleines : notes posées. Pointillées : notes en suspens. La bille montre où la note retombe${ok?'':' (cadre vert : la bonne réponse, rouge : ta réponse)'}.</p></div>`+h;
+  if(!k.m&&REP[d]){h+=`<p class="small">${repHow(d)}</p>`;FB.r=()=>playRep(k,d,true);btn+=`<button class="lbtn" data-fb="r">${I.play}Repère : ${REP[d].s}</button>`}}
+ else if(q.type==='chord'){const d=q.ans,a=v;FB.c=()=>playChordSolo(k,d,true);FB.y=()=>playChordSolo(k,a,true);FB.x=()=>cycleAlt('c',d);
+  h=`<p>${ok?'':`C'était le <b>${RR()[d-1]}</b>${cn(d)}, pas le ${RR()[a-1]}.<br>`}<span id="alt">${expl('c',d)}</span></p>${ok?'':`<p class="muted">${contrastC(d,a)}</p>`}<p class="small">La basse jouait ${d>7?'la note':'le <b>'+d+'</b>'}${nm(d)} : la note la plus grave donne le degré de l'accord.</p>`;
+  h=fmapHTML(d,ok?0:a)+h;
+  btn=`<button class="lbtn" data-fb="c">${I.play}${RR()[d-1]} (bonne réponse)</button>${ok?'':`<button class="lbtn" data-fb="y">${I.play}${RR()[a-1]} (ta réponse)</button>`}`}
+ else if(q.type==='qual'){FB.c=()=>{const t=newBus();playChord(q.chord,t,1.4,.55)};const r=q.chord.tri[0];FB.o=()=>{const t=newBus();playChord({bass:q.chord.bass,tri:[r,r+(q.min?4:3),r+7]},t,1.4,.55)};
+  h=`<p>${ok?'Oui, ':''}c'était un accord <b>${q.min?'mineur':'majeur'}</b>. ${q.min?'Plus sombre, émouvant : la note du milieu (le 3) est un demi-ton plus bas.':'Stable, lumineux : la note du milieu (le 3) est un demi-ton plus haut que dans le mineur.'}</p><p class="small">Méthode : écoute la note du milieu de l'accord. Majeur : claire et ouverte. Mineur : plus sombre. Appuie sur « l'autre » pour comparer : une seule note change.</p>`;
+  h=triHTML(q.min)+h;
+  btn=`<button class="lbtn" data-fb="c">${I.play}${q.min?'Mineur':'Majeur'} (entendu)</button><button class="lbtn" data-fb="o">${I.play}${q.min?'Majeur':'Mineur'} (l'autre)</button>`}
+ else if(q.type==='mel'||q.type==='prog'){const kind=q.type==='mel'?'deg':'chd';FB.c=()=>playSeq(k,q.ans,q.type);FB.y=()=>playSeq(k,v,q.type);
+  const fam=q.type==='prog'?FAMOUS.find(f=>f.p.join()===q.ans.join()):null;
+  const wrongI=q.ans.findIndex((d,i)=>d!==v[i]);
+  h=`<div class="stack" style="gap:6px"><div class="seqrow"><span class="small muted" style="width:92px">Bonne réponse</span>${q.ans.map(d=>chip(d,kind)).join('')}</div>${ok?'':`<div class="seqrow"><span class="small muted" style="width:92px">Ta réponse</span>${v.map(d=>chip(d,kind)).join('')}</div>`}</div>`;
+  if(q.type==='mel'){h+=contourHTML(q.ans,v,ok?-1:wrongI);h+=ok?`<p>Bravo, la mélodie est juste. Elle commence sur ${DG()[q.ans[0]].n.toLowerCase()} et finit sur le ${q.ans[q.ans.length-1]} : ${DG()[q.ans[q.ans.length-1]].s?'une note stable, la phrase se pose.':'une note instable, la phrase reste en suspens.'}</p>`
+   :`<p>L'erreur commence à la note ${wrongI+1} : c'était le <b>${q.ans[wrongI]}</b>${nm(q.ans[wrongI])}, pas le ${v[wrongI]}.</p><p class="small">${melHow(q.ans,v,wrongI)}</p><p class="small">${expl('d',q.ans[wrongI])}</p>`;
+}
+  else{h+=ok?`<p>Grille juste !</p>`:`<p>L'erreur commence à l'accord ${wrongI+1} : c'était le <b>${RR()[q.ans[wrongI]-1]}</b>${cn(q.ans[wrongI])}, pas le ${RR()[v[wrongI]-1]}.</p>${fmapHTML(q.ans[wrongI],v[wrongI])}<p class="small">${contrastC(q.ans[wrongI],v[wrongI])}</p><p class="small">${expl('c',q.ans[wrongI])}</p>`;
+   if(fam)h+=`<p class="small">C'est <b>${fam.nick.toLowerCase()}</b>, celle de ${fam.songs}.</p>`;
+   h+=`<p class="small muted">${S.showNames?'En '+keyName(k)+' : '+q.ans.map(d=>chordName(k,d)).join(' – ')+'. ':''}Rejoue-la au clavier pour l'ancrer dans tes mains.</p>`}
+  btn=`<button class="lbtn" data-fb="c">${I.play}Bonne réponse</button>${ok?'':`<button class="lbtn" data-fb="y">${I.play}Ta version</button>`}`}
+ else if(q.type==='rhy'){const a=q.opts[v];FB.c=()=>playPat(q.pat,q.chord);FB.y=()=>playPat(a,q.chord);
+  h=`${rgHTML(q.pat,'Bonne réponse',true)}${ok?'':rgHTML(a,'Ta réponse',true)}<p>${ok?'Juste. ':''}Coups sur : ${patWords(q.pat).join(', ')}.</p>`;
+  if(!ok){const df=q.pat.findIndex((x,i)=>x!==a[i]);h+=`<p class="small">Premier écart : ${slotName(df)}, ${q.pat[df]?'il y avait un coup':'il n\'y en avait pas'}.</p>`}
+  h+=`<p class="small muted">Méthode : compte à voix haute « 1 et 2 et 3 et 4 et » pendant les clics, puis note à quel mot tombe chaque coup : un chiffre = un temps, « et » = un contretemps.</p>`;
+  btn=`<button class="lbtn" data-fb="c">${I.play}Bonne réponse</button>${ok?'':`<button class="lbtn" data-fb="y">${I.play}Ta réponse</button>`}`}
+ else if(q.type==='progid'){const f=FAMOUS[q.ans],a=FAMOUS[v];FB.c=()=>{let t=newBus();f.p.forEach((d,i)=>playChord(chordMidis(k,d),t+i,.9,.5))};FB.y=()=>{let t=newBus();a.p.forEach((d,i)=>playChord(chordMidis(k,d),t+i,.9,.5))};
+  h=`<p>${ok?'Oui, ':''}c'était <b>${f.nick.toLowerCase()}</b> : ${f.p.map(d=>RR()[d-1]).join(' – ')}, celle de ${f.songs}.</p><p class="small">Pour la reconnaître : ${fp(f)}.${f.p[0]===6?' Le début triste (vi) lui donne sa couleur mélancolique.':''}</p>${ok?'':`<p class="small muted">Ta réponse, ${a.nick.toLowerCase()}, enchaîne ${a.p.map(d=>RR()[d-1]).join(' – ')}. Pour elle : ${fp(a)}. Compare avec la bonne réponse.</p>`}`;
+  btn=`<button class="lbtn" data-fb="c">${I.play}Bonne réponse</button>${ok?'':`<button class="lbtn" data-fb="y">${I.play}Ta réponse</button>`}`}
+ return {h,btn}}
+function showFeedback(q,ok){const {h,btn:b0}=explain(q,ok);const btn=b0+(FB.x?`<button class="lbtn" data-fb="x">Expliquer autrement</button>`:'');
+ const praise=['Juste !','Bien entendu !','Exactement !','Bravo !','Oreille fine !'];
+ const div=document.createElement('div');div.className='sheet '+(ok?'ok':'ko');div.setAttribute('role','dialog');
+ div.innerHTML=`<div class="in"><h2>${ok?I.star('var(--good)').replace('<svg','<svg width="28" height="28"'):'<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--bad)" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>'}${ok?pick(praise):'Pas tout à fait'}${ok&&Q.combo>1?` <span class="pill" style="font-size:13px;color:var(--accent)">${I.flame}${Q.combo} d'affilée</span>`:''}</h2>${h}<div class="lbtns">${btn}</div><button class="btn ${ok?'good':'bad'}" data-act="next">Continuer</button></div>`;
+ app.appendChild(div);
+ if(q.type==='deg'){setTimeout(()=>playDeg(q.key,q.ans,q.oct,true,false),200);setTimeout(()=>ladderAnim(q.ans),240)}
+ setTimeout(()=>{div.querySelector('[data-act=next]').focus({preventScroll:true});const i=div.querySelector('.in');if(i)i.scrollTop=0},50)}
+function next(){Q.i++;if(Q.practice){Q.qs.push(practiceGen(Q.practice));renderQ();return}if(Q.i>=Q.qs.length)return finish();renderQ()}
+function finish(){const pct=Math.round(Q.ok/Q.qs.length*100),pass=pct>=80;let stars=pct===100?3:pct>=90?2:pct>=70?1:0;let bonus=0,msg='';
+ if(Q.lesson){const id=Q.lesson.id,rec=S.lessons[id]||{best:0,stars:0,plays:0};const wasPassed=rec.best>=80;rec.plays++;rec.best=Math.max(rec.best,pct);rec.stars=Math.max(rec.stars,stars);S.lessons[id]=rec;if(pct>=80&&!wasPassed)planNow().nw=1;
+  award('first');if(pct===100){award('perfect');bonus+=30}if(pass){bonus+=20;
+   if(!wasPassed){const gi=LESSONS.indexOf(Q.lesson);const nx=LESSONS[gi+1];msg=nx?`Leçon suivante débloquée : <b>${tx(nx.t)}</b>`:`Tu as atteint l'objectif final : <b>${RANKS[U.length]}</b> !`}}
+  else msg=`Il faut 80 % pour débloquer la suite. Tu y es presque : réessaie, c'est en répétant que l'oreille se forme.`;
+  checkUnits()}
+ else{msg='Séance du jour terminée. Reviens demain pour garder ta série.';stars=Math.max(stars,0)}
+ S.xp+=bonus;save();view='result';
+ app.innerHTML=`<div class="result stack"><span class="eyebrow">${Q.title}</span><h1>${pass?(pct===100?'Sans faute !':'Leçon réussie !'):'Bien joué, continue !'}</h1>
+ <div class="bigstars">${[0,1,2].map(i=>I.star(i<stars?'var(--gold)':'var(--surface2)')).join('')}</div>
+ <div class="statgrid"><div class="stat"><b>${pct} %</b><span>réussite</span></div><div class="stat"><b>+${Q.xp+bonus}</b><span>XP</span></div><div class="stat"><b>${todayCount()}/${goalQ()}</b><span>aujourd'hui</span></div></div>
+ ${msg?`<p class="card">${msg}</p>`:''}
+ ${Q.lesson&&!pass?`<button class="btn" data-start="${Q.lesson.id}">Réessayer</button>`:''}
+ <button class="btn ${Q.lesson&&!pass?'ghost':''}" data-go="home">Continuer</button></div>`}
+
+/* ===================== LEÇONS « COMPRENDRE » ET DÉFIS AU CLAVIER ===================== */
+const IC_OK=I.star('var(--good)').replace('<svg','<svg width="28" height="28"');
+const IC_KO='<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--bad)" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+let LN=null;
+function flash(m,ms=400){document.querySelectorAll('[data-m="'+m+'"]').forEach(el=>{el.classList.add('on');setTimeout(()=>el.classList.remove('on'),ms)})}
+function playSeqM(list,gap=.5){const t=newBus();list.forEach((x,i)=>{(Array.isArray(x)?x:[x]).forEach(m=>{tone(m,t+i*gap,gap+.9,.62);setTimeout(()=>flash(m,Math.max(300,gap*800)),Math.max(0,(t-AC.currentTime+i*gap)*1000))})})}
+function tap(m){audio();if(!bus)newBus();tone(m,AC.currentTime+.01,1.3,.62);flash(m,300)}
+function kbHTML(hl,opt={}){
+ const ms=Object.keys(hl).map(Number);
+ const from=opt.from!=null?opt.from:(ms.length?Math.floor(Math.min(...ms)/12)*12:60);
+ let to=opt.to!=null?opt.to:(ms.length?Math.max(Math.max(...ms),from+12):from+12);
+ while(isBlack(to))to++;
+ const whites=[];for(let m=from;m<=to;m++)if(!isBlack(m))whites.push(m);
+ const w=100/whites.length;
+ let h='<div class="kb" role="group" aria-label="Clavier à l\'écran">';
+ whites.forEach(m=>{const x=hl[m],nat=fmt(NN[m%12]);
+  h+=`<button class="wk${x?' hl':''}" data-m="${m}" style="width:${w}%;${x?'background:'+DCOL[x.d]:''}" aria-label="${x?x.n:nat}"><span class="kl">${x?(x.l!=null?x.l:x.d):''}</span>${x&&S.showNames?`<i class="kn">${x.n}</i>`:(opt.names?`<i class="kn">${nat}</i>`:'')}</button>`});
+ for(let m=from;m<=to;m++){if(!isBlack(m))continue;const i=whites.indexOf(m-1);if(i<0||m+1>to)continue;const x=hl[m];
+  h+=`<button class="bk${x?' hl':''}" data-m="${m}" style="left:${(i+1)*w-w*.3}%;width:${w*.6}%;${x?'background:'+DCOL[x.d]:''}" aria-label="${x?x.n:'touche noire'}">${x?(x.l!=null?x.l:x.d):''}</button>`}
+ return h+'</div>'}
+function ctrlHTML(pg){normKey(pg);const k=LN.key,s=pg.sel?pg.sel[LN.si].v:null,hl=pg.kb?pg.kb(k,s):null,ks=pg.keys||KEYS;LN.pk=ks;
+ return `${pg.pick?`<div class="opt sm" role="group" aria-label="Tonalité">${ks.map((x,i)=>`<button data-lk="${i}" aria-pressed="${x===k}">${fmt(x.notes[0])}${x.m?'m':''}</button>`).join('')}</div>`:''}
+ ${pg.sel?`<div class="opt sm" role="group">${pg.sel.map((o,i)=>`<button data-ls="${i}" aria-pressed="${i===LN.si}">${tx(o.l)}</button>`).join('')}</div>`:''}
+ ${hl?kbHTML(hl,pg.kbopt||{}):''}
+ ${pg.rgs?pg.rgs.map(r=>rgHTML(r.p,r.l,true)).join(''):''}
+ ${pg.demos?`<div class="lbtns">${pg.demos.map((d,i)=>`<button class="lbtn" data-ld="${i}">${I.play}${tx(d.l)}</button>`).join('')}</div>`:''}`}
+function redraw(){const y=window.scrollY;if(LN.mode==='kb')drawKb();else drawLearn();window.scrollTo(0,y)}
+function openLesson(id){const l=LBY[id],gi=LESSONS.indexOf(l);
+ if(!unlocked(gi)){toast(LESSONS[gi-1].type==='learn'?'Termine la leçon précédente pour débloquer celle-ci':'Réussis la leçon précédente à 80 % pour débloquer celle-ci');return}
+ if(l.type==='learn')startLearn(id);else if(l.type==='kb')startKb(id);else renderIntro(id);window.scrollTo(0,0)}
+function startLearn(id){LN={l:LBY[id],mode:'pages',p:0,qi:0,ok:0,si:0,key:KEYS[0],answered:false,ordQ:-1};drawLearn()}
+function startKb(id){LN={l:LBY[id],mode:'kb',si:0,key:KEYS[0]};drawKb()}
+function drawLearn(){view='learn';const l=LN.l,total=l.pages.length+l.qs.length;
+ if(LN.mode==='pages'){const pg=l.pages[LN.p],k=normKey(pg),s=pg.sel?pg.sel[LN.si].v:null,last=LN.p===l.pages.length-1;
+  app.innerHTML=`<div class="qtop"><button class="xbtn" data-act="lquit" aria-label="Quitter">${I.close}</button><div class="bar"><i style="width:${LN.p/total*100}%"></i></div></div>
+  <div class="stack learn"><div><span class="eyebrow">${tx(l.t)} · page ${LN.p+1}/${l.pages.length}</span><h2 style="margin-top:4px">${tx(pg.t)}</h2></div>
+  ${LN.p===0?whyHTML(l.id):''}<p>${tx(typeof pg.h==='function'?pg.h(k,s):pg.h)}</p>${ctrlHTML(pg)}${pg.tip?`<div class="tip">${tx(pg.tip)}</div>`:''}
+  <div class="nav2">${LN.p>0?'<button class="btn ghost" data-act="lprev">Retour</button>':'<span></span>'}<button class="btn" data-act="lnext2">${last?'Les questions':'Suivant'}</button></div></div>`}
+ else{const q=l.qs[LN.qi];
+  if(LN.ordQ!==LN.qi){LN.ord=q.o.map((_,i)=>i).sort(()=>Math.random()-.5);LN.ordQ=LN.qi}
+  app.innerHTML=`<div class="qtop"><button class="xbtn" data-act="lquit" aria-label="Quitter">${I.close}</button><div class="bar"><i style="width:${(l.pages.length+LN.qi)/total*100}%"></i></div></div>
+  <div class="stack learn"><div><span class="eyebrow">Vérifie ce que tu as compris · ${LN.qi+1}/${l.qs.length}</span><h2 style="margin-top:4px">${tx(q.q)}</h2></div>
+  <div class="answers list">${LN.ord.map(i=>`<button class="ans long txt" data-lq="${i}"><b>${tx(q.o[i])}</b></button>`).join('')}</div></div>`}}
+function lAnswer(i){if(LN.answered)return;LN.answered=true;const q=LN.l.qs[LN.qi],ok=i===0;
+ if(ok){LN.ok++;S.xp+=8}
+ tickDaily();save();
+ app.querySelectorAll('[data-lq]').forEach(b=>{b.disabled=true;const j=+b.dataset.lq;if(j===0)b.classList.add('right');else if(j===i)b.classList.add('wrong')});
+ const div=document.createElement('div');div.className='sheet '+(ok?'ok':'ko');div.setAttribute('role','dialog');
+ div.innerHTML=`<div class="in"><h2>${ok?IC_OK:IC_KO}${ok?pick(['Juste !','Exactement !','Bien vu !']):'Pas tout à fait'}</h2>${ok?'':`<p>La bonne réponse : <b>${tx(q.o[0])}</b></p>`}<p>${tx(q.w)}</p><button class="btn ${ok?'good':'bad'}" data-act="lnext">Continuer</button></div>`;
+ app.appendChild(div);setTimeout(()=>{div.querySelector('[data-act=lnext]').focus({preventScroll:true});const i=div.querySelector('.in');if(i)i.scrollTop=0},50)}
+function bigStars(n){return `<div class="bigstars">${[0,1,2].map(i=>I.star(i<n?'var(--gold)':'var(--surface2)')).join('')}</div>`}
+function finishLearn(){const l=LN.l,n=l.qs.length,pct=Math.round(LN.ok/n*100),stars=pct===100?3:pct>=75?2:1;
+ const rec=S.lessons[l.id]||{best:0,stars:0,plays:0},first=!rec.done;rec.plays++;rec.best=Math.max(rec.best,pct);rec.stars=Math.max(rec.stars,stars);rec.done=true;S.lessons[l.id]=rec;
+ const bonus=first?25:5;if(first)planNow().nw=1;else planNow().rev=1;S.xp+=bonus;award('first');award('learn1');if(pct===100)award('perfect');checkUnits();save();
+ const nx=LESSONS[LESSONS.indexOf(l)+1];view='result';
+ app.innerHTML=`<div class="result stack"><span class="eyebrow">${tx(l.t)}</span><h1>${pct===100?'Tout juste !':'Leçon terminée !'}</h1>${bigStars(stars)}
+ <div class="statgrid"><div class="stat"><b>${LN.ok}/${n}</b><span>bonnes réponses</span></div><div class="stat"><b>+${LN.ok*8+bonus}</b><span>XP</span></div><div class="stat"><b>${todayCount()}/${goalQ()}</b><span>aujourd'hui</span></div></div>
+ ${nx?`<p class="card">Suite : <b>${tx(nx.t)}</b></p>`:''}
+ <button class="btn" data-go="home">Continuer</button>${pct<100?`<button class="btn ghost" data-start-learn="${l.id}">Relire la leçon</button>`:''}</div>`}
+function drawKb(){view='kb';const l=LN.l,u=U[l.unit]||{title:'Défi de la semaine'};
+ app.innerHTML=`<div class="qtop"><button class="xbtn" data-act="lquit" aria-label="Quitter">${I.close}</button><span class="eyebrow">Au clavier · ${u.title}</span></div>
+ <div class="stack learn"><h1 style="font-size:28px">${tx(l.t)}</h1><p>${tx(l.intro)}</p>${whyHTML(l.id)}<ol class="steps">${l.steps.map(s=>`<li>${tx(s)}</li>`).join('')}</ol>${ctrlHTML(l)}<div class="tip"><b>Si ça coince.</b> ${tx(l.hint)}</div>
+ <button class="btn good" data-act="${l.chal?'chaldone':'kbdone'}">J'y suis arrivé</button><button class="btn ghost" data-act="lquit">Je le ferai plus tard</button><p class="small muted" style="text-align:center">Ce défi ne bloque pas la suite du parcours.</p></div>`}
+function kbDone(){const l=LN.l,rec=S.lessons[l.id]||{best:0,stars:0,plays:0},first=!rec.done;rec.plays++;rec.best=100;rec.stars=3;rec.done=true;S.lessons[l.id]=rec;
+ const bonus=first?40:5;if(first)planNow().nw=1;S.xp+=bonus;award('first');award('kb1');if(LESSONS.filter(x=>x.type==='kb').every(x=>S.lessons[x.id]&&S.lessons[x.id].done))award('kball');checkUnits();save();view='result';
+ app.innerHTML=`<div class="result stack"><span class="eyebrow">${tx(l.t)}</span><h1>Défi réussi !</h1>${bigStars(3)}<div class="statgrid" style="grid-template-columns:1fr 1fr"><div class="stat"><b>+${bonus}</b><span>XP</span></div><div class="stat"><b>${LESSONS.filter(x=>x.type==='kb'&&S.lessons[x.id]&&S.lessons[x.id].done).length}/${LESSONS.filter(x=>x.type==='kb').length}</b><span>défis clavier</span></div></div>
+ <p class="card">Rejoue-le de temps en temps : les doigts retiennent par la répétition.</p><button class="btn" data-go="home">Continuer</button></div>`}
+function dailyStart(){const ci=LESSONS.findIndex((l,i)=>unlocked(i)&&!passed(l.id)&&!l.opt),cur=LESSONS[ci];
+ const un=LESSONS.filter((l,i)=>unlocked(i)&&EAR(l));
+ if(cur&&cur.type==='learn'){openLesson(cur.id);return}
+ if(!un.length){if(cur)openLesson(cur.id);return}
+ startQuiz('daily');window.scrollTo(0,0)}
+function tickDaily(){
+ const dk=dayKey(),before=S.daily[dk]||0;S.daily[dk]=before+1;
+if(before<goalQ()&&before+1>=goalQ()){S.streak.n=(S.streak.last===yesterday()?S.streak.n:S.streak.last===dk?S.streak.n:0)+(S.streak.last===dk?0:1);S.streak.last=dk;award('goal');if(S.streak.n>=3)award('s3');if(S.streak.n>=7)award('s7');if(S.streak.n>=30)award('s30');setTimeout(()=>toast(`Objectif du jour atteint ! Série : ${S.streak.n} jour${S.streak.n>1?'s':''}`),900)}
+}
+
+/* ===================== ENTRAÎNEMENT LIBRE ===================== */
+I.train='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 14-5.3L20 9M20 4v5h-5M20 12a8 8 0 0 1-14 5.3L4 15M4 20v-5h5"/></svg>';
+let PR=null;
+const earUnlocked=()=>LESSONS.filter((l,i)=>unlocked(i)&&EAR(l));
+function weakList(){const du=new Set(),cu=new Set();
+ earUnlocked().forEach(l=>{if(l.type==='deg')l.set.forEach(d=>du.add(d));if(l.type==='chord')l.set.forEach(d=>cu.add(d))});
+ const pw=(o,set)=>Object.entries(o).map(([d,a])=>({d:+d,t:a.length,a:a.length?a.reduce((x,y)=>x+y,0)/a.length:1})).filter(x=>set.has(x.d)&&x.t>=4&&x.a<.8).sort((a,b)=>a.a-b.a).slice(0,3);
+ return {deg:pw(S.rec.deg,du),chd:pw(S.rec.chd,cu),du:[...du],cu:[...cu]}}
+function genWeakQ(w){const kinds=[];if(w.deg.length)kinds.push('deg');if(w.chd.length)kinds.push('chd');const kind=pick(kinds);
+ const W=(kind==='deg'?w.deg:w.chd).map(x=>x.d),pool=kind==='deg'?w.du:w.cu;
+ const set=[...new Set([...W,...[1,5,3,4,2,6,7].filter(d=>pool.includes(d))])].slice(0,Math.max(W.length,4)).sort((a,b)=>a-b);
+ const q=gen({type:kind==='deg'?'deg':'chord',set,keys:'all',t:'Points faibles'});
+ if(Math.random()<.6){q.ans=pick(W);lastAns=q.ans}
+ q.src='Points faibles';return q}
+function practiceGen(src){let l;
+ if(src.k==='weak'){const w=weakList();if(w.deg.length||w.chd.length)return genWeakQ(w)}
+ if(src.k==='lesson')l=LBY[src.v];
+ else if(src.k==='unit')l=wpick(earUnlocked().filter(x=>x.unit===+src.v));
+ else l=wpick(earUnlocked());
+ const q=gen(l);q.src=src.k==='lesson'?'':l.t;return q}
+function startPractice(src){audio();let title;
+ if(!earUnlocked().length){toast("Termine d'abord une leçon d'oreille");return}
+ if(src.k==='weak'){const w=weakList();if(!w.deg.length&&!w.chd.length){toast("Pas de point faible repéré pour l'instant");return}title='Points faibles'}
+ else if(src.k==='lesson')title=LBY[src.v].t;else if(src.k==='unit')title=U[+src.v].title;else title='Tout mélanger';
+ lastAns=null;Q={qs:[],i:0,ok:0,combo:0,best:0,xp:0,title,lesson:null,practice:src,input:[],answered:false};Q.qs.push(practiceGen(src));renderQ()}
+function practiceEnd(){const n=Q.i+(Q.answered?1:0),pct=n?Math.round(Q.ok/n*100):0;PR=Q.practice;view='result';
+ app.innerHTML=`<div class="result stack"><span class="eyebrow">${Q.title}</span><h1>Séance terminée</h1><div class="statgrid"><div class="stat"><b>${n}</b><span>questions</span></div><div class="stat"><b>${pct} %</b><span>réussite</span></div><div class="stat"><b>${Q.best||0}</b><span>meilleure série</span></div></div><p class="card">+${Q.xp} XP · ${todayCount()}/${goalQ()} réponses aujourd'hui</p>${practiceAdvice()}<button class="btn" data-act="again">Continuer à s'entraîner</button><button class="btn ghost" data-act="plan">Ma séance du jour</button><button class="btn ghost" data-go="train">Retour à l'entraînement</button></div>`}
+function quitQuiz(){if(Q&&Q.practice){if(Q.i+(Q.answered?1:0)>0)practiceEnd();else go('train')}else go('home')}
+function renderTrain(){view='train';CK=KEYS[0];const w=weakList(),hasW=w.deg.length||w.chd.length,un=earUnlocked();
+ let h=topbar()+`<div class="stack"><div><h2>Entraînement libre</h2><p class="muted small" style="margin-top:6px">Répète autant que tu veux, sans cours ni note : c'est la répétition qui forme l'oreille. Chaque réponse compte pour ton objectif du jour.</p></div>`;
+ if(!un.length)h+=`<div class="card"><p>Termine d'abord les leçons de l'unité « Les bases » pour débloquer l'entraînement.</p></div>`;
+ else{
+  h+=`<div class="card stack" style="gap:10px"><h3>Points faibles</h3>${hasW?`<div class="seqrow">${w.deg.map(x=>`${chip(x.d,'deg')}<span class="small muted">${Math.round(x.a*100)} %</span>`).join('')}${w.chd.map(x=>`${chip(x.d,'chd')}<span class="small muted">${Math.round(x.a*100)} %</span>`).join('')}</div><p class="small muted">Les notes et accords que tu rates le plus. Ils reviennent plus souvent dans la séance.</p>`:`<p class="small muted">Rien à signaler pour l'instant. Quand tu rateras souvent une note ou un accord, il apparaîtra ici.</p>`}<button class="btn" data-pk="weak" ${hasW?'':'disabled'}>Travailler mes points faibles</button></div>
+  <button class="btn ghost" data-pk="all">Entraînement adaptatif</button><p class="small muted" style="margin-top:-4px">Dose la difficulté : plus de questions sur ce qui est fragile ou en progrès, moins sur ce que tu maîtrises déjà.</p>`;
+  U.forEach((u,ui)=>{const ls=un.filter(l=>l.unit===ui);if(!ls.length)return;
+   h+=`<section class="stack" style="gap:8px;margin-top:8px"><div class="row" style="justify-content:space-between"><div><div class="eyebrow">Unité ${ui+1}</div><h3>${u.title}</h3></div>${ls.length>1?`<button class="lbtn" data-pk="unit" data-pv="${ui}">Mélanger l'unité</button>`:''}</div>${ls.map(l=>{const r=S.lessons[l.id];return `<button class="ans long" data-pk="lesson" data-pv="${l.id}" style="gap:6px"><b style="font-size:16px">${l.t}</b>${mBar(l.id)}<span style="color:${mLevel(l.id).c}">${mLevel(l.id).t}${mastery(l.id).n>=8?' · '+mastery(l.id).p+' %':''} · ${mastery(l.id).n} réponses</span></button>`}).join('')}</section>`})}
+ app.innerHTML=h+`</div>`+tabs('train')}
+
+/* ===================== COACH : MAÎTRISE, RÉVISION, SÉANCE DU JOUR ===================== */
+const REVMAP={qual:'c1',chord:'c2',prog:'d1',progid:'d1',mel:'e1'};
+const revFor=l=>l.type==='rhy'?'r1':l.minor?'m0':(l.set&&l.set.some(d=>d>7))?'p1':l.keys?'f1':(REVMAP[l.type]||(l.set&&l.set.some(d=>[2,4,6,7].includes(d))?'e1':'b3'));
+function planNow(){const d=dayKey();if(!S.plan||S.plan.d!==d)S.plan={d,rev:0,tr:0,nw:0};return S.plan}
+function mastery(id){const a=S.mast[id]||[],n=a.length;return {n,p:n?Math.round(a.reduce((x,y)=>x+y,0)/n*100):null}}
+function mLevel(id){const m=mastery(id);
+ if(m.n<8)return {k:'new',t:'À découvrir',c:'var(--muted)',p:m.p||0};
+ if(m.p<60)return {k:'frag',t:'Fragile',c:'var(--bad)',p:m.p};
+ if(m.p<85)return {k:'prog',t:'En progrès',c:'var(--gold)',p:m.p};
+ return {k:'solid',t:'Solide',c:'var(--good)',p:m.p}}
+const mBar=id=>{const l=mLevel(id);return `<span class="mb"><i style="width:${l.p}%;background:${l.c}"></i></span>`};
+const mLabel=id=>{const l=mLevel(id),m=mastery(id);return `<span class="small" style="color:${l.c}">${l.t}${m.n>=8?' · '+m.p+' %':''}</span>`};
+function wpick(ls){const ws=ls.map(l=>{const k=mLevel(l.id).k;return k==='prog'?4:k==='solid'?1:3});let r=Math.random()*ws.reduce((a,b)=>a+b,0);for(let i=0;i<ls.length;i++){r-=ws[i];if(r<=0)return ls[i]}return ls[ls.length-1]}
+function reviewTarget(){const c=[],w=weakList();
+ w.deg.forEach(x=>c.push({id:[1,3,5].includes(x.d)?'b3':'e1',a:x.a,why:`le ${x.d} (${Math.round(x.a*100)} %)`}));
+ w.chd.forEach(x=>c.push({id:'c2',a:x.a,why:`l'accord ${ROM[x.d-1]} (${Math.round(x.a*100)} %)`}));
+ earUnlocked().forEach(l=>{const m=mastery(l.id);if(m.n>=8&&m.p<70)c.push({id:revFor(l),a:m.p/100,why:`« ${l.t} » (${m.p} %)`})});
+ return c.map(x=>({...x,id:passed(x.id)?x.id:(x.id==='c2'?(passed('c1')?'c1':null):(passed('b3')?'b3':null))})).filter(x=>x.id).sort((a,b)=>a.a-b.a)[0]||null}
+function practiceAdvice(){const s=PR;if(!s||s.k!=='lesson')return '';const l=LBY[s.v],m=mastery(l.id),lv=mLevel(l.id);
+ if(m.n<10)return '';
+ if(m.p>=85){const nx=earUnlocked().find(x=>LESSONS.indexOf(x)>LESSONS.indexOf(l));return `<p class="card">Niveau <b style="color:${lv.c}">${lv.t}</b> : ${m.p} % sur tes 20 dernières réponses. ${nx?`Tu peux passer à « ${nx.t} » ou mélanger l'unité.`:`Passe à l'entraînement adaptatif.`}</p>`}
+ if(m.p<60){const r=revFor(l),ok=LBY[r]&&passed(r);return `<p class="card">Encore <b style="color:${lv.c}">fragile</b> : ${m.p} %. ${ok?`Relis « ${LBY[r].t} » puis réessaie.`:'Réessaie à tête reposée.'}</p>${ok?`<button class="btn ghost" data-lesson="${r}">Relire le cours</button>`:''}`}
+ return `<p class="card">Niveau <b style="color:${lv.c}">${lv.t}</b> : ${m.p} %. Encore quelques séries pour le consolider.</p>`}
+function renderPlan(){view='plan';const p=planNow(),w=weakList(),rv=reviewTarget(),un=earUnlocked();
+ const ci=LESSONS.findIndex((l,i)=>unlocked(i)&&!passed(l.id)&&!l.opt),nx=ci>=0?LESSONS[ci]:null;
+ const target=Math.max(6,Math.round(goalQ()*.4)),hasW=w.deg.length||w.chd.length;
+ let diag;
+ if(hasW)diag='À retravailler : '+[...w.deg.map(x=>`le ${x.d} (${Math.round(x.a*100)} %)`),...w.chd.map(x=>`l'accord ${ROM[x.d-1]} (${Math.round(x.a*100)} %)`)].join(', ')+'.';
+ else if(S.stats.t<20)diag="On démarre : pas encore assez de réponses pour repérer tes points faibles. Avance dans le parcours, la séance s'adaptera à toi.";
+ else diag="Aucun point faible repéré sur tes dernières réponses : on consolide, puis on avance.";
+ const nmin=nx?(nx.type==='learn'?3:nx.type==='kb'?5:4):0,rmin=rv?2:0,tmin=Math.max(3,S.minutes-rmin-nmin);
+ const steps=[];
+ if(rv)steps.push({done:!!p.rev,t:`Réviser : « ${LBY[rv.id].t} »`,d:`Tu rates souvent ${rv.why}. Un rappel de 2 minutes avant de t'entraîner.`,m:rmin,b:`<button class="btn ghost" data-lesson="${rv.id}">Relire le cours</button>`});
+ if(un.length)steps.push({done:p.tr>=target,t:hasW?'S\'entraîner sur mes points faibles':'S\'entraîner (dosé selon ma maîtrise)',d:`${Math.min(p.tr,target)} / ${target} réponses.${hasW?' Les notes et accords fragiles reviennent plus souvent.':' Plus de questions sur ce qui est fragile ou en progrès.'}`,m:tmin,b:`<button class="btn" data-pk="${hasW?'weak':'all'}">${p.tr>0&&p.tr<target?'Continuer':'Commencer'}</button>`});
+ if(nx)steps.push({done:!!p.nw,t:`Avancer : ${tx(nx.t)}`,d:nx.type==='learn'?'Une nouvelle leçon de théorie.':nx.type==='kb'?'Un défi à faire sur ton clavier.':'La prochaine leçon d\'oreille du parcours.',m:nmin,b:`<button class="btn ghost" data-lesson="${nx.id}">Ouvrir la leçon</button>`});
+ const cu=chalCur();if(cu)steps.push({done:cu.done,opt:1,t:`Défi de la semaine : ${cu.c.song}`,d:cu.done?'Déjà fait cette semaine : tu peux le rejouer.':'Une vraie chanson à jouer au clavier, facultatif.',m:10,b:`<button class="btn ghost" data-act="chal">${cu.done?'Le revoir':'Relever le défi'}</button>`});
+ const all=steps.filter(s=>!s.opt).length&&steps.filter(s=>!s.opt).every(s=>s.done);
+ app.innerHTML=topbar()+`<div class="stack"><div class="row" style="justify-content:space-between"><h2>Ta séance du jour</h2><button class="lbtn" data-go="home">Parcours</button></div>
+ <div class="card stack" style="gap:8px"><div class="eyebrow">Le coach a regardé tes réponses</div><p>${diag}</p><p class="small muted">Objectif : ${S.minutes} min environ. Fais les étapes dans l'ordre, ou celles que tu veux.</p></div>
+ ${steps.map((s,i)=>`<div class="card step"><span class="stepn ${s.done?'done':''}">${s.done?'✓':i+1}</span><div class="stack" style="gap:8px"><div><h3>${s.t}</h3><p class="small muted">${s.d} ≈ ${s.m} min</p></div>${s.b}</div></div>`).join('')}
+ ${all?`<div class="card"><b>Séance terminée.</b> Tu peux t'arrêter là, ou t'entraîner encore dans l'onglet Entraîner.</div>`:''}</div>`+tabs('home')}
+function progressExtra(){
+ const days=[...Array(14)].map((_,i)=>{const d=new Date();d.setDate(d.getDate()-13+i);return dayKey(d)});
+ const agg=ks=>{let n=0,c=0;ks.forEach(k=>{const h=S.hist[k];if(h){n+=h.n;c+=h.c}});return {n,c,p:n?Math.round(c/n*100):null}};
+ const w1=agg(days.slice(7)),w0=agg(days.slice(0,7));
+ const trend=w1.p==null?'Pas encore de réponses cette semaine.':`7 derniers jours : <b>${w1.p} %</b> sur ${w1.n} réponses${w0.p!=null?` (la semaine d'avant : ${w0.p} %${w1.p>w0.p?', en hausse':w1.p<w0.p?', en baisse':''})`:''}.`;
+ const mx=Math.max(1,...days.map(k=>S.hist[k]?S.hist[k].n:0));
+ const bars=days.map(k=>{const h=S.hist[k],p=h&&h.n?Math.round(h.c/h.n*100):null;return `<div><span>${p==null?'':p}</span><i class="${p!=null&&p>=85?'on':''}" style="height:${h?Math.max(4,h.n/mx*80):4}px"></i>${k.slice(8)}</div>`}).join('');
+ const un=earUnlocked(),ms=un.map(l=>mastery(l.id)).filter(m=>m.n>=8),glob=ms.length?Math.round(ms.reduce((a,m)=>a+m.p,0)/ms.length):null;
+ const byU=U.map((u,ui)=>({u,ui,ls:un.filter(l=>l.unit===ui)})).filter(x=>x.ls.length);
+ return `<div class="card stack" style="gap:10px"><div class="row" style="justify-content:space-between"><h3>Évolution</h3><span class="pill">Maîtrise ${glob==null?'–':glob+' %'}</span></div><p class="small">${trend}</p><div class="week w14">${bars}</div><p class="small muted">Hauteur : nombre de réponses. Chiffre : réussite du jour, en orange dès 85 %.</p></div>
+ <div class="card stack" style="gap:12px"><h3>Maîtrise par leçon</h3><p class="small muted">Calculée sur tes 20 dernières réponses à chaque leçon, leçon ou entraînement confondus.</p>${byU.length?byU.map(x=>`<div class="stack" style="gap:8px"><div class="eyebrow">Unité ${x.ui+1} · ${x.u.title}</div>${x.ls.map(l=>`<div class="stack" style="gap:4px"><div class="row" style="justify-content:space-between"><span class="small">${l.t}</span>${mLabel(l.id)}</div>${mBar(l.id)}</div>`).join('')}</div>`).join(''):'<p class="small muted">Apparaît dès ta première leçon d\'oreille.</p>'}</div>`}
+function recPct(kind,d){const a=S.rec[kind][d];return a&&a.length>=2?Math.round(a.reduce((x,y)=>x+y,0)/a.length*100):null}
+
+/* ===================== RYTHME ===================== */
+function click(t,acc,v=.22){const o=AC.createOscillator(),g=AC.createGain();o.type='square';o.frequency.value=acc?1700:1150;g.gain.setValueAtTime(v*(acc?1.2:.8),t);g.gain.exponentialRampToValueAtTime(.001,t+.05);o.connect(g);g.connect(bus);o.start(t);o.stop(t+.06)}
+function playPat(p,chord,o={}){const beat=60/(o.bpm||84),sl=beat/2;const t=newBus();
+ for(let i=0;i<4;i++)click(t+i*beat,i===0);
+ const t0=t+4*beat;
+ for(let r=0;r<2;r++)p.forEach((v,i)=>{if(!v)return;const tt=t0+(r*8+i)*sl;if(chord)chord.forEach((m,j)=>tone(m,tt,.45,j?.3:.4));else tone(79,tt,.22,.6)});
+ for(let b=0;b<8;b++)click(t0+b*beat,false,.1);
+ for(let r=0;r<2;r++)for(let i=0;i<8;i++){const d=(t0-AC.currentTime+(r*8+i)*sl)*1000;setTimeout(()=>{document.querySelectorAll('.rg.live .rgc[data-ri="'+i+'"]').forEach(el=>{el.classList.add('cur');setTimeout(()=>el.classList.remove('cur'),sl*900)})},Math.max(0,d))}
+ return 4*beat+16*sl+.4}
+const slotName=i=>i%2?`le « et » du ${(i-1)/2+1}`:`le temps ${i/2+1}`;
+const patWords=p=>p.map((v,i)=>v?slotName(i):null).filter(Boolean);
+function rgHTML(p,label,live){return `<div class="rgw">${label?`<div class="small muted">${label}</div>`:''}<div class="rg${live?' live':''}">${p.map((v,i)=>`<span class="rgc${v?' h':''}" data-ri="${i}">${i%2===0?i/2+1:'+'}</span>`).join('')}</div></div>`}
+function genRhy(l,q){if(l.gen){const ans=randPat(l.gen),opts=[ans];let g=0;
+  while(opts.length<4&&g++<80){const m=ans.slice(),n=l.gen==='e'?2:(Math.random()<.5?1:2);for(let j=0;j<n;j++){const i=1+Math.floor(Math.random()*7);m[i]=m[i]?0:1}if(m.join()!==ans.join()&&!opts.some(o=>o.join()===m.join()))opts.push(m)}
+  opts.sort(()=>Math.random()-.5);q.opts=opts;q.pat=ans;q.ans=opts.indexOf(ans);q.chord=l.id==='r6'?chA(pick(KEYS),pick([1,4,5,6])):null;return}
+ const pats=l.pats,ci=Math.floor(Math.random()*pats.length),ans=pats[ci],opts=[ans];
+ pats.filter((_,i)=>i!==ci).sort(()=>Math.random()-.5).forEach(o=>{if(opts.length<4)opts.push(o)});
+ while(opts.length<4){const m=ans.slice(),i=Math.floor(Math.random()*8);m[i]=m[i]?0:1;if(m.some(x=>x)&&!opts.some(o=>o.join()===m.join()))opts.push(m)}
+ opts.sort(()=>Math.random()-.5);q.opts=opts;q.pat=ans;q.ans=opts.indexOf(ans);q.chord=l.id==='r6'?chA(KEYS[0],pick([1,4,5,6])):null}
+function normKey(pg){const ks=pg.keys||KEYS;if(!ks.includes(LN.key))LN.key=ks[0];return LN.key}
+/* ===================== DÉFI DE LA SEMAINE ===================== */
+const weekKey=()=>{const d=new Date();d.setDate(d.getDate()-((d.getDay()+6)%7));return dayKey(d)};
+const CHAL=[
+ {id:'w1',song:'Twist and Shout',artist:'The Beatles',key:'D',prog:[1,4,5],part:'du refrain',need:'3b',note:'Trois accords seulement : un excellent premier défi.'},
+ {id:'w2',song:'Let It Be',artist:'The Beatles',key:'C',prog:[1,5,6,4],part:'du couplet',need:'3b',note:'La grille pop la plus célèbre.'},
+ {id:'w3',song:'Stand by Me',artist:'Ben E. King',key:'A',prog:[1,6,4,5],part:'du couplet',need:'3d',note:'La grille des années 50.'},
+ {id:'w4',song:'Country Roads',artist:'John Denver',key:'A',prog:[1,6,5,4],part:'du refrain',need:'3d',note:'Chantable de bout en bout.'},
+ {id:'w5',song:'With or Without You',artist:'U2',key:'D',prog:[1,5,6,4],part:'du couplet',need:'f1',note:'La grille pop, dans une autre tonalité.'},
+ {id:'w6',song:'Zombie',artist:'The Cranberries',key:'G',prog:[6,4,1,5],part:'du couplet',need:'4c',note:'Elle commence sur le vi : couleur mélancolique.'},
+ {id:'w7',song:'Perfect',artist:'Ed Sheeran',key:'G',prog:[1,6,4,5],part:'du couplet',need:'4c',note:'Pratique pour s\'accompagner au chant.'},
+ {id:'w8',song:'Sweet Home Alabama',artist:'Lynyrd Skynyrd',key:'D',prog:[1,8,4,1],part:'du couplet',need:'p3',note:'Le ♭VII, l\'accord rock.'},
+ {id:'w9',song:'Brown Eyed Girl',artist:'Van Morrison',key:'G',prog:[1,4,1,5],part:'du couplet',need:'3d',note:'I – IV – I – V : très simple et très chantable.'},
+ {id:'w10',song:'All Along the Watchtower',artist:'Bob Dylan',key:'Am',m:1,prog:[1,7,6,7],part:'de la boucle',need:'m4',note:'Un classique en mineur : i – VII – VI – VII.'},
+ {id:'w11',song:'Knockin\' on Heaven\'s Door',artist:'Bob Dylan',key:'G',prog:[1,5,2,1,5,4],part:'du couplet',need:'6a',note:'Avec un ii.'},
+ {id:'w12',song:'Hallelujah',artist:'Leonard Cohen',key:'C',prog:[1,6,1,6,4,5,1,5],part:'du couplet',need:'6b',note:'À six temps (6/8) : compte 1-2-3 4-5-6.'}];
+const CHALBY={};CHAL.forEach(c=>{CHALBY[c.id]=c});
+function chalCur(){const w=weekKey();S.chalDone=S.chalDone||[];
+ if(!S.chal||S.chal.w!==w||(!S.chal.id&&CHAL.some(c=>!S.chalDone.includes(c.id)&&passed(c.need)))){
+  const c=CHAL.find(x=>!S.chalDone.includes(x.id)&&passed(x.need));S.chal={w,id:c?c.id:null,done:false};if(c)save()}
+ return S.chal.id?{c:CHALBY[S.chal.id],done:S.chal.done}:null}
+const chalKey=c=>(c.m?MKEYS:KEYS).find(x=>x.id===c.key);
+function chalCard(){const cu=chalCur();
+ if(cu){const c=cu.c,k=chalKey(c),rm=c.m?ROMM:ROM;
+  return `<div class="card stack" style="gap:8px;border-color:var(--gold)"><div class="eyebrow" style="color:var(--gold)">Défi de la semaine${cu.done?' · fait':''}</div><h3>${c.song} <span class="muted small">· ${c.artist}</span></h3><p class="small muted">${keyName(k)} · ${c.prog.map(d=>rm[d-1]).join(' – ')}</p><button class="btn ${cu.done?'ghost':''}" data-act="chal">${cu.done?'Le revoir':'Relever le défi'}</button></div>`}
+ if(!passed(CHAL[0].need))return `<div class="card"><div class="eyebrow">Défi de la semaine</div><p class="small muted">Le premier défi, une vraie chanson à jouer, se débloque après « ${LBY[CHAL[0].need].t} ».</p></div>`;
+ if(CHAL.every(c=>S.chalDone.includes(c.id)))return `<div class="card"><div class="eyebrow">Défi de la semaine</div><p class="small muted">Tu as relevé tous les défis. Choisis toi-même une chanson que tu aimes : trouve sa tonalité et sa grille, puis joue-la.</p></div>`;
+ return `<div class="card"><div class="eyebrow">Défi de la semaine</div><p class="small muted">Le prochain défi se débloque en avançant dans le parcours.</p></div>`}
+function chalLesson(c){const k=chalKey(c),rm=c.m?ROMM:ROM,uniq=[...new Set(c.prog)],names=c.prog.map(d=>chordName(k,d)).join(' – ');
+ return {id:'w:'+c.id,chal:true,type:'kb',t:'Défi : '+c.song,keys:c.m?MKEYS:KEYS,k0:k,
+  intro:`${c.song} (${c.artist}). Joue la grille ${c.part} : <b>${c.prog.map(d=>rm[d-1]).join(' – ')}</b>, soit ${names} en ${keyName(k)}. ${c.note||''}`,
+  steps:[`Choisis la tonalité ${keyName(k)} avec les boutons, puis touche les accords un par un : ils s'allument.`,`Joue la grille en boucle, une mesure (4 temps) par accord, en tapant du pied. Utilise le motif rythmique de ton choix.`,`Chante ou fredonne la mélodie par-dessus, sans quitter la grille.`,`Compare avec la vraie chanson (écoute-la, ou cherche-la sur TheoryTab).`],
+  pick:true,sel:uniq.map(d=>({v:d,l:rm[d-1]})),kb:(k,s)=>s>7?chordHLX(k,s):chordHL(k,s),
+  demos:[{l:'Écouter la grille',run:k=>playSeqM(c.prog.map(d=>chA(k,d)),1.1)}],
+  hint:`Cette grille est écrite de mémoire : la vraie chanson peut avoir des variantes (capodastre, accords ajoutés). Si ça sonne faux, fie-toi à ton oreille et compare avec TheoryTab.`}}
+function openChal(){const cu=chalCur();if(!cu){toast('Pas de défi pour cette semaine');return}audio();LN={l:chalLesson(cu.c),mode:'kb',si:0,key:chalKey(cu.c)};drawKb();window.scrollTo(0,0)}
+function chalDone(){const l=LN.l,id=l.id.slice(2);S.chalDone=S.chalDone||[];const again=S.chalDone.includes(id);if(!again)S.chalDone.push(id);
+ if(S.chal&&S.chal.id===id)S.chal.done=true;const bonus=again?10:60;S.xp+=bonus;planNow().nw=1;award('first');award('chal1');if(S.chalDone.length>=4)award('chal4');save();view='result';
+ app.innerHTML=`<div class="result stack"><span class="eyebrow">Défi de la semaine</span><h1>Défi réussi !</h1>${bigStars(3)}<div class="statgrid" style="grid-template-columns:1fr 1fr"><div class="stat"><b>+${bonus}</b><span>XP</span></div><div class="stat"><b>${S.chalDone.length}/${CHAL.length}</b><span>défis relevés</span></div></div><p class="card">Reviens la semaine prochaine pour un nouveau défi. En attendant, rejoue celui-ci en changeant de tonalité.</p><button class="btn" data-go="home">Continuer</button></div>`}
+/* ===================== REPÈRES : UN AIR CONNU PAR NOTE ===================== */
+const REP={
+ 1:{s:'Au clair de la lune',d:[1,1,1,2,3,2],w:'elle commence par trois fois le 1, la note maison'},
+ 2:{s:'Frère Jacques',d:[1,2,3,1],w:'le 2 est la deuxième note : un petit pas au-dessus de la maison'},
+ 3:{s:'Ode à la joie',d:[3,3,4,5,5,4,3,2],w:'la mélodie démarre sur le 3'},
+ 4:{s:'Ode à la joie',d:[3,3,4,5,5,4,3,2],w:'le 4 est la troisième note, le petit pas qui suit le 3 avant d\'arriver au 5'},
+ 5:{s:'Joyeux anniversaire',d:[5,5,6,5,8,7],w:'elle démarre sur le 5, répété, puis monte vers le 6'},
+ 6:{s:'Ah ! vous dirai-je, maman',d:[1,1,5,5,6,6,5],w:'les deux 6 arrivent juste après les deux 5'},
+ 7:{s:'Joyeux anniversaire',d:[5,5,6,5,8,7],w:'la dernière note est le 7 : elle sonne en suspens et veut monter au 1'},
+ 8:{s:'Over the Rainbow',d:[1,8],w:'le début est un grand saut d\'une octave, du 1 au 1 plus aigu'}};
+function playRep(k,d,withCad){let t=newBus();if(withCad)t=cadence(k,t);REP[d].d.forEach((x,i)=>{tone(degMidi(k,x),t+i*.5,.8,.65);setTimeout(()=>flash(degMidi(k,x),380),Math.max(0,(t-AC.currentTime+i*.5)*1000))})}
+function repBlock(set){const ds=set.filter(d=>REP[d]);return ds.length?`<div class="stack" style="gap:8px"><div class="eyebrow">Un air connu pour chaque note</div><div class="lbtns">${ds.map(d=>`<button class="lbtn" data-ex="rep" data-d="${d}">${I.play}${d} · ${REP[d].s}</button>`).join('')}</div><p class="small muted">Chante l'air depuis la maison : la note à repérer arrive au bon moment.</p></div>`:''}
+/* ===================== EXPLICATIONS SOUS PLUSIEURS ANGLES ===================== */
+const EXN={};
+function angles(kind,d){const m=CK.m;
+ if(kind==='d'){const base=DG()[d].t;if(!m&&ALTD[d])return [base,...ALTD[d],...(REP[d]?[repHow(d)]:[])];const st=DG()[d].s;
+  return [base,`Test de l'arrêt : ${st?"tu peux t'arrêter dessus, ça sonne posé":"si tu t'arrêtes dessus, ça sonne en suspens"}.`,`Distance : ${d===1?"c'est la note maison, aucun pas à faire":"à "+(d-1)+" pas au-dessus du 1 dans la gamme"}. Chante la gamme depuis le 1 pour la retrouver.`]}
+ const base=CH()[d];if(!m&&ALTC[d])return [base,...ALTC[d]];
+ return [base,`Écoute la couleur : majeur (lumineux) ou mineur (sombre) ? Puis la basse te donne le degré.`,`Chante la note de basse, puis compare-la avec la note maison.`]}
+function nextAngle(kind,d){const L=angles(kind,d),key=kind+d+(CK.m?'m':''),i=EXN[key]||0;EXN[key]=i+1;return L[i%L.length]}
+const expl=(kind,d)=>nextAngle(kind,d);
+function cycleAlt(kind,d){const el=document.getElementById('alt');if(el)el.textContent=nextAngle(kind,d)}
+const resTxt=d=>d===1?"il ne bouge pas, il est déjà chez lui":d===6?"il retombe sur la note stable la plus proche : 6 → 5":d===7?"il monte vers la maison : 7 → 1":"il redescend vers la maison : "+RES[d].join(' → ');
+function randPat(kind){for(let n=0;n<80;n++){const p=Array.from({length:8},(_,i)=>i===0?1:(Math.random()<(kind==='e'?(i%2?.45:.7):(i%2?.5:.65))?1:0));const h=p.reduce((a,b)=>a+b,0),odd=p.filter((v,i)=>v&&i%2).length;if(h>=3&&h<=6&&odd>=(kind==='e'?1:2))return p}return PAT[kind][0]}
+Object.entries({1:0,2:1,3:0,4:2,5:0,6:4,7:5,8:1}).forEach(([d,i])=>{REP[d].i=i});
+const ordN=n=>n===1?'1re':n+'e';
+function repHow(d){const r=REP[d];return r.i===0?`Repère : chante « ${r.s} » en partant de cette note, c'est sa 1re note. Si l'air se pose juste avec la cadence, c'est ${d===8?"l'octave du 1":'le '+d}.`:`Repère : dans « ${r.s} », cette note est la ${ordN(r.i+1)} note. Chante l'air depuis le début, dans la tonalité de la cadence, et vérifie que tu retombes sur elle.`}
+function contrastD(d,a){const sd=DG()[d].s,sa=DG()[a].s,pas=`Chante la gamme depuis la maison : le ${d} est la ${ordN(d)} note, le ${a} la ${ordN(a)}. Réécoute la note mystère et place-la sur cette échelle.`;
+ if(sd!==sa)return `Tu as répondu le ${a} (${sa?'stable':'instable'}), c'était le ${d} (${sd?'stable':'instable'}). Test de l'arrêt : arrête-toi sur la note. Si tu peux t'y arrêter, elle est stable (1, 3, 5) ; sinon, instable (2, 4, 6, 7). ${pas}`;
+ return `Le ${d} et le ${a} sont tous les deux ${sd?'stables':'instables'} : le test de l'arrêt ne les sépare pas. ${pas} Le ${d} est plus ${d>a?'haut':'bas'} que le ${a}.`}
+const ROLE=()=>CK.m?{1:'la maison mineure, sombre',3:'majeur lumineux, cousin du i',4:"mineur, on s'éloigne",5:'mineur discret',6:'majeur, ouverture',7:'majeur, pousse vers le i'}:{1:'la maison : posé',2:'mineur doux, prépare le V',3:'mineur rare',4:'le départ : ouvert, doux',5:'la tension : en attente',6:'le mineur triste',8:'le rock : majeur ouvert, un ton sous la maison'};
+function contrastC(d,a){const R=ROLE(),qd=QL(CK)[d-1],qa=QL(CK)[a-1],col=qd!==qa?` Première chose à trancher : majeur ou mineur ? Le ${RR()[d-1]} est ${qd==='m'?'mineur':'majeur'}, le ${RR()[a-1]} ${qa==='m'?'mineur':'majeur'}.`:'';
+ return `Tu as répondu ${RR()[a-1]} (${R[a]||'autre accord'}), c'était ${RR()[d-1]} (${R[d]||'autre accord'}).${col} Compare ensuite la basse à la maison : celle du ${RR()[d-1]} est ${d===8?'un ton sous la maison':'la '+ordN(d)+' note de la gamme'}.`}
+const FIRST={1:'posé (I)',6:'triste (vi)',4:'ouvert (IV)',5:'en attente (V)'};
+const fp=f=>`début : ${FIRST[f.p[0]]||'?'}, fin : ${FIRST[f.p[f.p.length-1]]||'?'}`;
+function melHow(ans,v,i){const mv=(a,b)=>b>a?`monte de ${b-a} pas`:b<a?`descend de ${a-b} pas`:'reste sur la même note';
+ if(i===0)return `C'est la première note : retrouve d'abord la maison avec la cadence, puis demande-toi si la note est posée (1, 3, 5) ou en suspens.`;
+ const p=ans[i-1];return `Depuis le ${p}, la mélodie ${mv(p,ans[i])} (vers le ${ans[i]}) ; ta réponse ${mv(p,v[i])} (vers le ${v[i]}). Méthode : chante les notes juste avant l'erreur, puis cherche la suivante par sa direction et son nombre de pas.`}
+const ALTD={
+1:[`Méthode : après la cadence, chante la dernière note (la maison). Si la note mystère est la même, c'est le 1.`,`Test de l'arrêt : tu peux t'arrêter dessus et la phrase est finie. Aucun besoin de suite.`,`Aucun pas à faire : c'est la note de départ de la gamme, les autres se comptent à partir d'elle.`],
+2:[`Méthode : chante 1 – 2 – 1. Si la note mystère est celle du milieu, un pas au-dessus de la maison, c'est le 2.`,`Test de l'arrêt : arrête-toi dessus : ça sonne en suspens, tu veux redescendre d'un pas vers la maison.`,`Il est tout près de la maison : un pas au-dessus. Si la note est plus loin, ce n'est pas le 2.`],
+3:[`Méthode : chante 1 – 2 – 3. Le 3 est la 3e note de la gamme, deux pas au-dessus de la maison.`,`Test de l'arrêt : tu peux t'arrêter dessus. Contrairement au 1, elle sonne lumineuse, comme un sourire.`,`C'est la note du milieu de l'accord de la maison (1 – 3 – 5) : si tu entends l'accord, c'est celle du milieu.`],
+4:[`Méthode : chante 1 – 2 – 3 – 4. Le 4 est la 4e note : juste au-dessus du 3 et juste en dessous du 5.`,`Test de l'arrêt : tu ne peux pas vraiment t'arrêter dessus, ça sonne lourd. Il retombe d'un pas sur le 3.`,`Compare-le au 5 : le 5 est ouvert et on peut s'y arrêter, le 4 pèse et attend.`],
+5:[`Méthode : chante 1 – 2 – 3 – 4 – 5. Le 5 est la 5e note, tout en haut de l'accord de la maison.`,`Test de l'arrêt : tu peux t'arrêter dessus, mais ça sonne ouvert, comme une demi-fin. Le 1, lui, sonne fini.`,`Compare-le au 1 : le 5 est plus haut et plus « en l'air », le 1 est le point final.`],
+6:[`Méthode : chante 1 – 2 – 3 – 4 – 5 – 6. Le 6 est la 6e note, juste au-dessus du 5.`,`Test de l'arrêt : ça sonne tendre, un peu triste, instable : il retombe d'un pas sur le 5.`,`Chante 5 – 6 – 5 : ce petit balancement tendre te donne la couleur du 6.`],
+7:[`Méthode : chante la gamme jusqu'au 7. C'est la dernière avant la maison, un demi-ton sous le 1 : monte d'un demi-ton et tu y es.`,`Test de l'arrêt : impossible de s'arrêter dessus, ça sonne coupé : l'oreille attend le 1.`,`C'est la note la plus tendue de la gamme : un ressort tendu qui veut monter.`]};
+const ALTC={
+1:[`Méthode : te sens-tu arrivé ? Oui : c'est le I, la musique pourrait s'arrêter ici.`,`Basse : c'est la même note que la maison (le 1).`,`Couleur : majeur, lumineux. Les autres accords s'en éloignent.`],
+2:[`Méthode : mineur et plutôt doux : c'est le ii. Sa basse est au 2e pas de la gamme.`,`Rôle : il prépare le V. Cherche-le juste avant la tension, comme dans ii → V → I.`],
+3:[`Méthode : mineur et rare : c'est le iii. Sa basse est au 3e pas.`,`Il ressemble au I (deux notes en commun) mais en plus sombre.`],
+4:[`Méthode : majeur, ouvert, qui s'éloigne de la maison sans tension forte : c'est le IV.`,`Basse : au 4e pas de la gamme. Chante 1 – 2 – 3 – 4 pour la retrouver.`,`Rôle : il ramène doucement au I (IV → I) : c'est le « amen » des chansons.`],
+5:[`Méthode : en attente. Tu ne peux pas finir dessus, il appelle le I : c'est le V.`,`Basse : au 5e pas de la gamme, la note ouverte.`,`Couleur : majeur, mais « en l'air ». V → I est le mouvement le plus fort.`],
+6:[`Méthode : d'abord, triste ou pas ? Triste : c'est le vi (le seul mineur des 4 accords de la pop).`,`Basse : au 6e pas, juste au-dessus du 5.`,`C'est le « cousin triste » du I : ils partagent deux notes. Il ouvre « Zombie ».`],
+7:[`Un accord rare en pop : instable, il demande à être résolu vers le I.`,`Basse : le 7, juste sous la maison.`],
+8:[`Méthode : majeur, lumineux, un pas de côté : c'est le ♭VII. Sa basse est un ton sous la note maison.`,`On l'entend dans « Sweet Home Alabama » : I – ♭VII – IV.`,`Compare-le au V : le V attend et appelle le I ; le ♭VII est ouvert et rock.`]};
+/* ===================== EXPLICATIONS IMAGÉES ===================== */
+const stepH=n=>22+n*10;
+function ladderHTML(mark,mine){let h='<div class="lad" id="lad"><i class="ball" id="ball" style="left:calc(-20px);bottom:-20px;opacity:0"></i>';
+ for(let n=1;n<=8;n++){const dd=n>7?1:n,st=n===8||[1,3,5].includes(n);
+  h+=`<button class="rung ${st?'st':'un'}${n===mark?' me':''}${n===mine?' you':''}" data-ex="lad" data-d="${n}" style="--c:${DCOL[dd]};height:${stepH(n)}px" aria-label="${n===8?'octave':'le '+n}">${n===8?'1′':n}</button>`}
+ return h+'</div>'}
+function ballTo(n,hop){const b=document.getElementById('ball');if(!b)return;b.style.opacity=1;b.style.left=`calc(${(n-.5)/8*100}% - 9px)`;b.style.bottom=`${stepH(n)+4}px`}
+function ladderAnim(d){const path=RES[d]||[d];ballTo(d);path.slice(1).forEach((n,i)=>setTimeout(()=>ballTo(n),550+i*380));if(path.length===1){setTimeout(()=>ballTo(1),0)}}
+const FZ=()=>CK.m?{T:[1,3,6],S:[4],D:[5,7]}:{T:[1,6,3],S:[4,2,8],D:[5]};
+function fmapHTML(d,a){const z=FZ(),R=RR(),zone=(k,t)=>`<div class="fz"><b>${t}</b><div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:center">${z[k].map(x=>`<span class="c${x===d?' ok':''}${a&&x===a&&a!==d?' ko':''}">${R[x-1]}</span>`).join('')}</div></div>`;
+ return `<div class="vis"><div class="fmap">${zone('T','Maison')}<span class="farr">→</span>${zone('S','Départ')}<span class="farr">→</span>${zone('D','Tension')}</div><p class="small muted">Une grille tourne : Maison → Départ → Tension → retour à la maison. Cadre vert : la bonne réponse${a?', rouge : ta réponse':''}.</p></div>`}
+function contourHTML(ans,v,wi){const n=ans.length,X=i=>30+i*(240/Math.max(1,n-1)),Y=d=>112-(d-1)*14;
+ const pts=a=>a.map((d,i)=>X(i)+','+Y(d)).join(' ');
+ let s=`<svg class="cont" viewBox="0 0 300 130" width="100%" role="img" aria-label="Dessin de la mélodie"><line x1="10" x2="290" y1="${Y(1)}" y2="${Y(1)}" stroke="#a3a7cc" stroke-dasharray="3 5" opacity=".6"/><text x="12" y="${Y(1)-4}" font-size="10" fill="#a3a7cc">1 = maison</text>`;
+ if(wi>=0)s+=`<polyline class="r" points="${pts(v)}"/>`;
+ s+=`<polyline class="g" pathLength="1" points="${pts(ans)}"/>`;
+ ans.forEach((d,i)=>{s+=`<circle cx="${X(i)}" cy="${Y(d)}" r="6" fill="${DCOL[d]}" stroke="${i===wi?'#ff5c7a':'#12142a'}" stroke-width="${i===wi?3:1.5}"/><text x="${X(i)}" y="${Y(d)-10}" font-size="11" text-anchor="middle" fill="#f3f1ff" font-weight="700">${d}</text>`});
+ return `<div class="vis">${s}</svg><p class="small muted">Le dessin de la mélodie : vert = bonne réponse${wi>=0?', rouge pointillé = ta réponse, cercle rouge = la 1re erreur':''}. Plus c'est haut, plus la note est aiguë.</p></div>`}
+function triHTML(min){return `<div class="vis"><div class="tri"><i class="f"></i><i class="t"></i><i class="r"></i></div><p class="small muted">La note du milieu (le 3) descend d'un demi-ton : l'accord passe de majeur (claire) à mineur (sombre).</p></div>`}
+/* ===================== AIDE (poser une question à Claude) ===================== */
+const AIDE={open:false,msgs:[],busy:false};
+const plain=h=>String(h||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+function aideCtx(){const o=[];
+ const l=(typeof Q!=='undefined'&&Q&&Q.lesson)||(typeof LN!=='undefined'&&LN&&LN.l)||CHL;
+ if(l){o.push('Leçon en cours : '+plain(l.t)+' (type '+l.type+').');if(l.intro)o.push('Intro de la leçon : '+plain(l.intro).slice(0,600));if(WHY[l.id])o.push('But de la leçon : '+WHY[l.id].join(' '))}
+ try{if(view==='quiz'&&Q&&Q.qs&&Q.qs[Q.i]){const q=Q.qs[Q.i];o.push('Question en cours : type '+q.type+', tonalité '+keyName(q.key)+'.');
+  if(Q.answered)o.push('Il a répondu. Bonne réponse : '+JSON.stringify(q.ans)+'. Sa réponse : '+JSON.stringify(q.given)+'.');else o.push("Il n'a pas encore répondu : ne révèle PAS la bonne réponse, aide-le avec la méthode.")}}catch(e){}
+ return o.join('\n')}
+const AIDE_SYS=`Tu es l'aide d'une appli d'ear training (Oreille Pop). L'élève est un débutant français au piano ; son but : jouer des chansons à l'oreille (mélodie et accords) et s'accompagner en chantant. Réponds en français, court (5 phrases max), concret, sans jargon inutile, sans ton poétique ni commercial. Explique avec une méthode qu'il peut appliquer (chanter, comparer à la note maison, chercher au clavier). Vocabulaire de l'appli : la maison = la tonique (degré 1), degrés 1 à 7, accords en chiffres romains (I, IV, V, vi), cadence = dans l'appli, TOUJOURS les 4 accords I – IV – V – I en majeur (i – iv – V – i en mineur), qui se terminent sur l'accord de la maison : la dernière note de la cadence est donc toujours le degré 1 (la tonique). Elle est jouée avant chaque question, dans une tonalité qui change à chaque question. Ne contredis jamais ces faits de l'appli (en musique en général une cadence peut finir ailleurs, mais pas ici). Grille = suite d'accords. Sur la méthode : on chante la dernière note de la cadence pour avoir la maison, puis on compare la note mystère à elle. Si tu n'es pas sûr, dis-le. Si la question n'a pas de rapport avec la musique ou l'appli, ramène-la poliment au sujet.`;
+function aideDraw(){let el=document.getElementById('aide');if(!AIDE.open){if(el)el.remove();return}
+ if(!el){el=document.createElement('div');el.id='aide';el.className='aide';document.body.appendChild(el)}
+ const sug=AIDE.msgs.length?'':`<div class="sug">${["Je n'arrive pas à entendre la différence","Explique-moi autrement","À quoi sert cet exercice ?"].map(t=>`<button data-aq="${t}">${t}</button>`).join('')}</div>`;
+ el.innerHTML=`<div class="in" role="dialog" aria-label="Aide"><div class="row" style="justify-content:space-between"><h3>Aide</h3><button class="xbtn" data-aide="close" aria-label="Fermer">${I.close}</button></div>
+ <div class="msgs" id="aidem">${AIDE.msgs.length?AIDE.msgs.map(m=>`<div class="m ${m.r==='user'?'u':'a'}">${esc(m.content)}</div>`).join(''):`<div class="m a">Pose ta question sur l'exercice en cours ou sur la théorie. Je vois la leçon où tu es.</div>`}${AIDE.busy?'<div class="m a">…</div>':''}</div>${sug}
+ <form id="aideform"><textarea id="aideq" placeholder="Ta question" rows="2"></textarea><button type="submit">Envoyer</button></form></div>`;
+ const m=document.getElementById('aidem');if(m)m.scrollTop=m.scrollHeight}
+const esc=t=>String(t).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+async function aideSend(text){text=(text||'').trim();if(!text||AIDE.busy)return;AIDE.msgs.push({r:'user',content:text});AIDE.busy=true;aideDraw();
+ try{const sample=window.claude&&claude.use?await claude.use('sample'):null;if(!sample)throw {code:'na'};
+  const hist=AIDE.msgs.slice(-8).map(m=>({role:m.r,content:m.content}));
+  hist[0]={role:'user',content:AIDE_SYS+'\n\nContexte :\n'+aideCtx()+'\n\n'+hist[0].content};
+  const r=await sample(hist,{cache:false,modelTier:'quick'});AIDE.msgs.push({r:'assistant',content:r.text||'Pas de réponse.'})}
+ catch(e){AIDE.msgs.push({r:'assistant',content:e&&e.code==='na'||(e&&e.code==='not_granted')?"L'aide n'est pas disponible ici (elle fonctionne dans l'app Claude, une fois autorisée).":"Je n'ai pas pu répondre, réessaie dans un instant."})}
+ AIDE.busy=false;aideDraw()}
+function aideFab(){let b=document.getElementById('aidefab');const show=view!=='onb'&&!AIDE.open&&!!(window.claude&&claude.use);
+ if(!b){b=document.createElement('button');b.id='aidefab';b.className='aidefab';b.setAttribute('data-aide','open');b.innerHTML='? Aide';document.body.appendChild(b)}
+ b.hidden=!show}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-aide],[data-aq]');if(!t)return;
+ if(t.dataset.aq){aideSend(t.dataset.aq);return}
+ if(t.dataset.aide==='open'){AIDE.open=true;aideDraw();aideFab()}else if(t.dataset.aide==='close'){AIDE.open=false;aideDraw();aideFab()}});
+document.addEventListener('submit',e=>{if(e.target.id==='aideform'){e.preventDefault();const q=document.getElementById('aideq');const v=q.value;q.value='';aideSend(v)}});
+setInterval(aideFab,500);
+/* ===================== TEST MIDI ===================== */
+async function midiTest(){const out=document.getElementById('midiout');const say=t=>{if(out)out.textContent=t};
+ if(!navigator.requestMIDIAccess){say("Ce navigateur n'expose pas le MIDI web ici (Safari et iPhone ne le gèrent pas). Essaie Chrome ou Edge sur ordinateur.");return}
+ try{say('Demande d\'accès au MIDI…');const a=await navigator.requestMIDIAccess();const ins=[...a.inputs.values()];
+  if(!ins.length){say("Accès MIDI autorisé, mais aucun clavier détecté. Vérifie le câble USB, puis relance le test.");return}
+  say('Clavier détecté : '+ins.map(i=>i.name).join(', ')+'. Joue une note.');
+  ins.forEach(i=>{i.onmidimessage=e=>{const [st,n,v]=e.data;if((st&0xf0)===0x90&&v>0)say('Note reçue : '+NN[n%12]+(Math.floor(n/12)-1)+' (MIDI '+n+'). Ça marche !')}})}
+ catch(e){say("Accès MIDI refusé ("+(e&&e.name||'erreur')+"). Dans Claude, la page est isolée et bloque probablement le MIDI : on ne pourra pas l'utiliser ici.")}}
+/* ===================== PROGRÈS ===================== */
+function renderProgress(){view='progress';const lv=level(),acc=S.stats.t?Math.round(S.stats.c/S.stats.t*100):0;
+ const days=[...Array(7)].map((_,i)=>{const d=new Date();d.setDate(d.getDate()-6+i);return{k:dayKey(d),l:['D','L','M','M','J','V','S'][d.getDay()]}});const mx=Math.max(goalQ(),...days.map(d=>S.daily[d.k]||0));
+ const ri=rankIdx();
+ app.innerHTML=topbar()+`<div class="stack">
+ <div class="card stack" style="gap:10px"><div class="eyebrow">Ton rang · ${ri}/${U.length} unités</div><h2>${RANKS[ri]}</h2><div class="bar" style="flex:none"><i style="width:${ri/U.length*100}%;background:var(--gold)"></i></div><p class="small muted">${ri<U.length?`Prochain rang : ${RANKS[ri+1]}, en finissant l'unité ${ri+1} (${U[ri].title}).`:'Objectif atteint. Garde ton oreille en forme avec la séance du jour.'}</p></div>
+ <div class="card stack" style="gap:10px"><div class="row" style="justify-content:space-between"><h3>Niveau ${lv.l}</h3><span class="small muted">${lv.cur} / ${lv.need} XP</span></div><div class="bar" style="flex:none"><i style="width:${lv.cur/lv.need*100}%;background:var(--accent)"></i></div></div>
+ <div class="statgrid"><div class="stat"><b>${streakNow()}</b><span>jours de série</span></div><div class="stat"><b>${S.stats.t}</b><span>réponses</span></div><div class="stat"><b>${acc} %</b><span>précision</span></div></div>
+ <div class="card stack"><h3>7 derniers jours</h3><div class="week">${days.map(d=>{const v=S.daily[d.k]||0;return `<div><span style="font-variant-numeric:tabular-nums">${v||''}</span><i class="${v>=goalQ()?'on':''}" style="height:${Math.max(4,v/mx*80)}px"></i>${d.l}</div>`}).join('')}</div><p class="small muted">En orange : objectif atteint (${goalQ()} réponses).</p></div>
+ ${progressExtra()}
+ <div class="card stack" style="gap:10px"><h3>Ton oreille, degré par degré</h3><p class="small muted" style="margin-top:-6px">Sur tes 12 dernières réponses pour chaque note.</p>${[1,2,3,4,5,6,7].map(d=>{const p=recPct('deg',d);return `<div class="hbar"><span class="chip" style="background:${DCOL[d]}">${d}</span><span class="t"><i style="width:${p||0}%;background:${DCOL[d]}"></i></span><span>${p==null?'–':p+' %'}</span></div>`}).join('')}</div>
+ <div class="card stack" style="gap:10px"><h3>Les accords</h3><p class="small muted" style="margin-top:-6px">Sur tes 12 dernières réponses pour chaque accord.</p>${[1,2,3,4,5,6].map(d=>{const p=recPct('chd',d);return `<div class="hbar"><span class="chip" style="background:${DCOL[d]}">${ROM[d-1]}</span><span class="t"><i style="width:${p||0}%;background:${DCOL[d]}"></i></span><span>${p==null?'–':p+' %'}</span></div>`}).join('')}</div>
+ <h3 style="margin-top:6px">Trophées</h3><div class="badges">${BADGES.map(b=>{const on=S.badges.includes(b.id);return `<div class="badge ${on?'':'off'}"><span class="medal">${b.s}</span><b>${b.t}</b><span>${b.d}</span></div>`}).join('')}</div></div>`+tabs('progress')}
+
+/* ===================== RÉGLAGES ===================== */
+let resetArm=false;
+function renderSettings(){view='settings';
+ app.innerHTML=topbar()+`<div class="stack">
+ <div class="card stack"><h3>Temps par jour</h3><div class="opt">${[5,10,15,20].map(m=>`<button data-min="${m}" aria-pressed="${S.minutes===m}">${m} min</button>`).join('')}</div><p class="small muted">Ton objectif : ${goalQ()} réponses par jour.</p></div>
+ <div class="card stack"><h3>Nom des notes</h3><div class="opt"><button data-not="fr" aria-pressed="${S.notation==='fr'}">Do, Ré, Mi</button><button data-not="en" aria-pressed="${S.notation==='en'}">C, D, E</button></div>
+ <div class="setrow"><span>Afficher le nom des notes sous les degrés</span><button class="switch" role="switch" aria-checked="${S.showNames}" data-act="names" aria-label="Afficher le nom des notes"></button></div></div>
+ <div class="card stack"><h3>Rappel quotidien</h3><div class="setrow"><label for="rem">Heure du rappel</label><input type="time" id="rem" value="${S.reminder}"></div><p class="small muted">Pour recevoir la notification sur ton téléphone, demande à Claude d'activer le rappel à cette heure. ${todayCount()>=goalQ()?"Aujourd'hui, c'est fait.":`Aujourd'hui, il te reste ${goalQ()-todayCount()} réponses.`}</p></div>
+ <div class="card stack"><h3>Clavier MIDI</h3><p class="small muted">Teste si ton clavier (Launchkey) est détecté par l'app. Branche-le en USB, utilise Chrome ou Edge sur ordinateur, puis touche le bouton et joue une note.</p><button class="btn ghost" data-act="miditest">Tester mon clavier MIDI</button><p class="small" id="midiout" aria-live="polite"></p></div>
+ <div class="card stack"><div class="setrow"><div><h3>Mode libre</h3><p class="small muted">Débloque toutes les leçons pour explorer le parcours.</p></div><button class="switch" role="switch" aria-checked="${S.free}" data-act="free" aria-label="Mode libre"></button></div></div>
+ <div class="card stack"><h3>Son</h3><button class="btn ghost" data-act="test">${I.play}Tester le son (cadence en Do)</button><p class="small muted">Sur iPhone, désactive le mode silencieux si tu n'entends rien.</p></div>
+ <div class="card stack"><h3>Sauvegarde</h3><p class="small muted" id="syncmsg">${syncMsg()}</p><button class="btn ghost" data-act="bkcopy">Copier ma sauvegarde</button><textarea id="bk" rows="3" placeholder="Pour restaurer, colle ici une sauvegarde copiée plus tôt" style="width:100%;background:var(--surface2);color:var(--fg);border:0;border-radius:12px;padding:10px;font:inherit;font-size:13px"></textarea><button class="btn ghost" data-act="bkrestore">Restaurer cette sauvegarde</button></div>
+ <div class="card stack"><h3>Recommencer à zéro</h3><p class="small muted">Efface ta progression sur cet appareil.</p><button class="btn ${resetArm?'bad':'ghost'}" data-act="reset">${resetArm?'Confirmer : tout effacer':'Effacer ma progression'}</button></div>
+ <p class="small muted" style="text-align:center">Ta progression est enregistrée dans ce navigateur.</p></div>`+tabs('settings')}
+
+/* ===================== ONBOARDING ===================== */
+let ob=0;
+function renderOnb(){view='onb';const steps=[
+ `<div class="hero-notes">${[1,2,3,4,5,6,7].map(d=>`<i style="background:${DCOL[d]}">${d}</i>`).join('')}</div><h1>Entraîne ton oreille pour jouer des chansons</h1><p class="muted">Un parcours pensé pour tes trois objectifs :</p>
+ <div class="card stack" style="gap:10px"><p><b>Retrouver une mélodie</b> à l'oreille, note par note.</p><p><b>Trouver les accords</b> pour t'accompagner au chant.</p><p><b>Comprendre</b> la théorie en leçons courtes, puis la jouer au clavier.</p></div><button class="btn" data-ob="1">C'est parti</button>`,
+ `<h1>Combien de temps par jour ?</h1><p class="muted">Mieux vaut un peu chaque jour que beaucoup le week-end.</p><div class="answers chd">${[5,10,15,20].map(m=>`<button class="ans" data-obmin="${m}" style="${S.minutes===m?'border-color:var(--accent)':''}"><b>${m}</b><span>minutes · ${m*4} réponses</span></button>`).join('')}</div><button class="btn" data-ob="2">Continuer</button>`,
+ `<h1>Comment nommer les notes ?</h1><p class="muted">Tu pourras changer plus tard dans les réglages.</p><div class="answers chd"><button class="ans" data-obnot="fr" style="${S.notation==='fr'?'border-color:var(--accent)':''}"><b>Do Ré Mi</b><span>noms français</span></button><button class="ans" data-obnot="en" style="${S.notation==='en'?'border-color:var(--accent)':''}"><b>C D E</b><span>noms anglais</span></button></div><button class="btn" data-ob="3">Continuer</button>`,
+ `<h1>À quelle heure te rappeler ?</h1><p class="muted">Choisis un moment où tu as 10 minutes au calme, avec un casque si possible.</p><div class="card setrow"><label for="obrem">Rappel quotidien</label><input type="time" id="obrem" value="${S.reminder}"></div><button class="btn" data-ob="done">Commencer le parcours</button>`];
+ app.innerHTML=`<div class="onb stack">${steps[ob]}<p class="small muted" style="text-align:center">${ob+1} / 4</p></div>`}
+
+/* ===================== UTILITAIRES ===================== */
+function award(id){if(S.badges.includes(id))return;S.badges.push(id);save();const b=BADGES.find(x=>x.id===id);if(b)setTimeout(()=>toast('Trophée débloqué : '+b.t),400)}
+let toastT;function toast(m){document.querySelectorAll('.toast').forEach(t=>t.remove());const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);clearTimeout(toastT);toastT=setTimeout(()=>t.remove(),2600)}
+function go(v){CK=KEYS[0];resetArm=false;if(v==='home')renderHome();else if(v==='train')renderTrain();else if(v==='progress')renderProgress();else if(v==='settings')renderSettings();window.scrollTo(0,0)}
+
+/* ===================== ÉVÉNEMENTS ===================== */
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const ds=b.dataset;
+ if(ds.go){go(ds.go);return}
+ if(ds.lesson){audio();openLesson(ds.lesson);return}
+ if(ds.pk){startPractice({k:ds.pk,v:ds.pv});window.scrollTo(0,0);return}
+ if(ds.startLearn){audio();startLearn(ds.startLearn);window.scrollTo(0,0);return}
+ if(ds.lk!=null){LN.key=(LN.pk||KEYS)[+ds.lk];redraw();return}
+ if(ds.ls!=null){LN.si=+ds.ls;redraw();return}
+ if(ds.ld!=null){audio();const pg=LN.mode==='kb'?LN.l:LN.l.pages[LN.p];const s=pg.sel?pg.sel[LN.si].v:null;pg.demos[+ds.ld].run(LN.key,s);return}
+ if(ds.m!=null&&(view==='learn'||view==='kb')){tap(+ds.m);return}
+ if(ds.lq!=null){lAnswer(+ds.lq);return}
+ if(ds.start){audio();startQuiz(ds.start);window.scrollTo(0,0);return}
+ if(ds.ex){const k=CK;if(ds.ex==='lad'){const n=+ds.d;playDeg(k,n===8?1:n,n===8?1:0,n!==8,true);ladderAnim(n);return}if(ds.ex==='rep')playRep(k,+ds.d,true);if(ds.ex==='rhy')playPat(CHL.pats[+ds.d]);if(ds.ex==='deg')playDeg(k,+ds.d,0,true,true);if(ds.ex==='chord')playChordSolo(k,+ds.d,true);if(ds.ex==='maj'||ds.ex==='min'){const t=newBus();playChord({bass:48,tri:[60,ds.ex==='min'?63:64,67]},t,1.4,.55)}if(ds.ex==='fam'){let t=newBus();FAMOUS[+ds.d].p.forEach((d,i)=>playChord(chordMidis(k,d),t+i,.9,.5))}return}
+ if(ds.a!=null&&view==='quiz'){answer(ds.a);return}
+ if(ds.fb&&FB[ds.fb]){FB[ds.fb]();return}
+ if(ds.min){S.minutes=+ds.min;save();renderSettings();return}
+ if(ds.not){S.notation=ds.not;save();renderSettings();return}
+ if(ds.obmin){S.minutes=+ds.obmin;save();renderOnb();return}
+ if(ds.obnot){S.notation=ds.obnot;save();renderOnb();return}
+ if(ds.ob){const r=document.getElementById('obrem');if(r)S.reminder=r.value||S.reminder;if(ds.ob==='done'){S.onboarded=true;save();audio();renderHome();window.scrollTo(0,0)}else{ob=+ds.ob;renderOnb()}return}
+ const act=ds.act;if(!act)return;
+ if(act==='daily'){audio();renderPlan();window.scrollTo(0,0)}
+ else if(act==='plan'){renderPlan();window.scrollTo(0,0)}
+ else if(act==='chal'){openChal()}
+ else if(act==='chaldone'){chalDone()}
+ else if(act==='lquit'){go('home')}
+ else if(act==='lprev'){LN.p--;LN.si=0;drawLearn();window.scrollTo(0,0)}
+ else if(act==='lnext2'){if(LN.p>=LN.l.pages.length-1){LN.mode='q';LN.qi=0;LN.ok=0;LN.answered=false;LN.ordQ=-1}else{LN.p++;LN.si=0}drawLearn();window.scrollTo(0,0)}
+ else if(act==='lnext'){LN.answered=false;LN.qi++;if(LN.qi>=LN.l.qs.length)finishLearn();else drawLearn();window.scrollTo(0,0)}
+ else if(act==='kbdone'){kbDone()}
+ else if(act==='bkcopy'){const txt=JSON.stringify(S),el=document.getElementById('bk');el.value=txt;el.select();(navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(()=>toast('Sauvegarde copiée')).catch(()=>toast('Texte sélectionné : copie-le à la main'))}
+ else if(act==='bkrestore'){try{const r=JSON.parse(document.getElementById('bk').value);if(!r||typeof r!=='object'||!r.lessons)throw 0;applyRemote(r,true);toast('Sauvegarde restaurée')}catch(e){toast('Sauvegarde invalide')}}
+ else if(act==='replay'){playQ(Q.qs[Q.i])}
+ else if(act==='cad'){let t=newBus();cadence(Q.qs[Q.i].key,t)}
+ else if(act==='tonic'){const t=newBus(),k=Q.qs[Q.i].key,tn=tonic(k),c=chordMidis(k,1),m=c.tri.find(x=>x%12===tn%12)||tn;tone(m,t,1.5,.7)}
+ else if(act==='undo'){if(!Q.answered){Q.input.pop();updateSlots()}}
+ else if(act==='next'){next();window.scrollTo(0,0)}
+ else if(act==='quit'){quitQuiz()}
+ else if(act==='again'){startPractice(PR);window.scrollTo(0,0)}
+ else if(act==='names'){S.showNames=!S.showNames;save();renderSettings()}
+ else if(act==='miditest'){midiTest()}
+ else if(act==='free'){S.free=!S.free;save();renderSettings()}
+ else if(act==='test'){let t=newBus();cadence(KEYS[0],t)}
+ else if(act==='reset'){if(!resetArm){resetArm=true;renderSettings()}else{S=structuredClone(DEF);S.onboarded=true;save();resetArm=false;toast('Progression effacée');renderSettings()}}
+});
+document.addEventListener('change',e=>{if(e.target.id==='rem'){S.reminder=e.target.value;save();toast('Rappel réglé à '+S.reminder)}});
+document.addEventListener('keydown',e=>{if(view!=='quiz')return;if(e.key===' '){e.preventDefault();playQ(Q.qs[Q.i])}if(e.key==='Enter'&&Q.answered){next()}if(/^[1-7]$/.test(e.key)&&!Q.answered){const q=Q.qs[Q.i];if((q.opts||[]).includes(+e.key))answer(e.key)}});
+
+if(S.onboarded)renderHome();else renderOnb();
+
+/* ===================== SAUVEGARDE SUR LE COMPTE ===================== */
+/* La progression est copiée dans la base privée du compte (db, data/users/<id>) : elle suit l'utilisateur d'un appareil à l'autre. Le plus récent gagne. */
+const SYNC={ref:null,t:null,busy:false,state:'local'};
+function syncMsg(){return SYNC.state==='ok'?'Ta progression est sauvegardée sur ton compte Claude : tu la retrouves sur ton iPhone comme sur ton Mac.':SYNC.state==='err'?"La sauvegarde sur ton compte n'a pas abouti. Ta progression reste sur cet appareil : réessaie plus tard.":'Ta progression est enregistrée sur cet appareil seulement (connecte-toi à Claude pour la sauvegarder sur ton compte).'}
+function syncUI(){const el=document.getElementById('syncmsg');if(el)el.textContent=syncMsg()}
+function syncPush(){if(!SYNC.ref)return;clearTimeout(SYNC.t);SYNC.t=setTimeout(async()=>{if(SYNC.busy){syncPush();return}SYNC.busy=true;try{await SYNC.ref.set(JSON.parse(JSON.stringify(S)));SYNC.state='ok'}catch(e){SYNC.state='err'}SYNC.busy=false;syncUI()},1500)}
+function applyRemote(r,restamp){S={...structuredClone(DEF),...r,stats:{...DEF.stats,...(r.stats||{})},streak:{...DEF.streak,...(r.streak||{})},rec:{deg:{},chd:{},...(r.rec||{})}};if(restamp)S.upd=Date.now();try{localStorage.setItem('oreillePop',JSON.stringify(S))}catch(e){}if(restamp)syncPush();
+ if(['quiz','learn','kb','result','intro'].includes(view))return;
+ if(!S.onboarded)renderOnb();else if(view==='train')renderTrain();else if(view==='progress')renderProgress();else if(view==='settings')renderSettings();else renderHome()}
+async function syncPull(){try{const snap=await SYNC.ref.get();
+ if(snap.exists&&(snap.data().upd||0)>(S.upd||0)){applyRemote(snap.data());SYNC.state='ok';syncUI();return}
+ SYNC.state='ok';if(S.upd)syncPush();syncUI()}catch(e){SYNC.state='err';syncUI()}}
+async function syncInit(){try{if(!window.claude||!claude.use)return;const [db,user]=await Promise.all([claude.use('db'),claude.use('user')]);if(!db||!user)return;const id=await user.id();if(!id)return;
+ SYNC.ref=db.doc('data/users/'+id+'/progress');await syncPull();
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!['quiz','learn','kb'].includes(view))syncPull()})}catch(e){}}
+syncInit();
+</script>
+</body></html>
