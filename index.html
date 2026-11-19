@@ -561,6 +561,21 @@ const WHY_A={
  a6:["Jouer le motif basse – accord – quinte – accord.","Il donne le rythme d'une chanson folk ou country avec très peu de notes."],
  a7:["Enchaîner quatre accords en arpège.","C'est ce que tu fais pour jouer un couplet entier : la grille tourne en boucle."],
  a8:["Chanter et jouer en même temps.","C'est ton objectif final : t'accompagner."]};
+
+/* ===================== OREILLE + CLAVIER MIDI ===================== */
+const degEv=(k,d)=>evNote(degMidi(k,d),d,String(d));
+const melStep=(k,ds,t)=>{const tn=degMidi(k,1);return {t:`${t} Les degrés : ${ds.join(' – ')}.`,mem:`Écoute (tu entends d'abord la maison, le 1, puis la mélodie), puis rejoue la mélodie sur ton clavier.`,listen:true,cue:[tn,...ds.map(d=>degMidi(k,d))],cueGap:.55,ev:ds.map(d=>degEv(k,d))}};
+const H1={id:'h1',type:'mid',opt:true,t:'À l\'oreille : rejouer une mélodie',intro:`Tu entends la maison (le 1), puis une courte mélodie. Rejoue-la sur ton clavier, sans que les touches soient affichées : c'est ton oreille qui guide tes doigts. Tu peux réécouter autant que tu veux. Ce défi ne bloque pas la suite.`,hint:`Chante la mélodie dans ta tête en partant du 1. Si tu bloques, « Montrer l'aide » affiche les touches.`,
+ build:k=>[[1,2,3],[3,2,1],[1,3,5],[1,2,3,2,1],[5,4,3,2,1]].map((ds,i)=>melStep(k,ds,`Mélodie ${i+1}.`))};
+const gridStep=(k,ds,t)=>({t:`${t} La grille : ${ds.map(d=>ROM[d-1]).join(' – ')} (${ds.map(d=>chordName(k,d)).join(' – ')}).`,mem:`Écoute (d'abord la maison, le I, puis 4 accords) et joue les 4 accords, plaqués, dans l'ordre.`,listen:true,cue:[chordMidis(k,1).tri,...ds.map(d=>chordMidis(k,d).tri)],cueGap:1,ev:ds.map(d=>evChord(triM(k,d),chordName(k,d)))});
+const H2={id:'h2',type:'mid',opt:true,t:'À l\'oreille : retrouver une grille',intro:`Tu entends d'abord le I (la maison), puis une grille de 4 accords. Retrouve-les à l'oreille et joue-les, plaqués. C'est le lien direct entre l'oreille et l'accompagnement : tu repères les accords, tu les joues. Ce défi ne bloque pas la suite.`,hint:`Cherche d'abord si le premier accord est la maison (I) ou un accord triste (vi). « Montrer l'aide » affiche les touches si tu bloques.`,
+ build:k=>[[1,5,6,4],[1,6,4,5],[1,4,5,1],[6,4,1,5]].map((ds,i)=>gridStep(k,ds,`Grille ${i+1}.`))};
+const AIRS=[['Ode à la joie (début)',[3,3,4,5,5,4,3,2,1,1,2,3,3,2,2]],['Au clair de la lune',[1,1,1,2,3,2,1,3,2,2,1]],['Frère Jacques',[1,2,3,1,1,2,3,1,3,4,5,3,4,5]]];
+const H3={id:'h3',type:'mid',opt:true,t:'À l\'oreille : un air connu',intro:`Trois airs que tu connais sûrement. L'app les joue sans te dire lesquels (le nom s'affiche avec l'aide). Retrouve chaque mélodie note par note sur ton clavier. C'est le même travail que pour retrouver une chanson que tu aimes. Ce défi ne bloque pas la suite.`,hint:`Chante l'air dans ta tête, puis cherche la première note à partir de la maison. Avance note par note : si une note est fausse, tu l'entends tout de suite.`,
+ build:k=>AIRS.map(([n,ds],i)=>({t:`${n}. Les degrés : ${ds.join(' – ')}.`,mem:`Air ${i+1} : un air connu. Écoute-le (la maison d'abord), puis rejoue-le.`,listen:true,cue:[degMidi(k,1),...ds.map(d=>degMidi(k,d))],cueGap:.5,ev:ds.map(d=>degEv(k,d))}))};
+U.find(u=>u.id==='u3').L.push(H2);
+U.find(u=>u.id==='u4').L.push(H1,H3);
+Object.assign(WHY_A,{h1:["Rejouer une mélodie en n'écoutant que ton oreille.","C'est ce que tu fais pour jouer une chanson que tu fredonnes : tu cherches les notes une à une."],h2:["Retrouver une grille d'accords à l'oreille et la jouer.","Repérer les accords d'une chanson, puis les jouer pour t'accompagner."],h3:["Retrouver des airs connus sur ton clavier.","Le même geste que pour jouer à l'oreille une chanson que tu aimes."]});
 U.push(U_A);
 const TRACK={ur:'acc',ua:'acc'};
 U.forEach(u=>{u.track=TRACK[u.id]||'ear'});
@@ -721,7 +736,7 @@ function renderHome(){view='home';const tc=todayCount(),g=goalQ();
  <div class="card goalcard stack"${tr!=='ear'?' hidden':''} style="gap:8px"><div class="eyebrow">Objectif final</div><h2>${RANKS[Math.min(U.length,RANKS.length-1)]}</h2><p class="muted small">Retrouver la mélodie et les accords d'une chanson pop simple, dans n'importe quelle tonalité, pour la jouer et t'accompagner au chant. Tu y arrives avec la théorie (Comprendre), l'oreille et des défis au clavier.</p><div class="row small"><span class="muted">${LESSONS.filter(l=>passed(l.id)).length} / ${LESSONS.length} leçons réussies</span></div></div></div>`;
  U.forEach((u,ui)=>{if(u.track!==tr)return;html+=`<section class="unit"><div class="unithead" style="background:${u.col}"><div class="eyebrow">Unité ${u.n} · ${u.goal}</div><h3>${u.title}</h3><p class="small" style="color:rgba(18,15,34,.8)">${u.desc}</p></div><div class="path">`;
   u.L.forEach((l,li)=>{const gi=LESSONS.indexOf(l),un=unlocked(gi),st=S.lessons[l.id]?.stars||0,isCur=gi===curIdx,fin=l.type==='mix';
-   html+=`<div class="node ${fin?'final':''}" style="transform:translateX(${offs[gi%8]}px)"><button class="bubble ${un?'':'locked'} ${isCur?'current':''}" style="background:${fin?'var(--gold)':u.col}" data-lesson="${l.id}" aria-label="${l.t}${un?'':' (verrouillée)'}">${un?(fin?I.crown:l.type==='learn'?I.book:l.type==='kb'||l.type==='mid'?I.keys:(li+1)):I.lock}</button>${starRow(st)}${l.opt?'<span class="tag">Facultatif</span>':l.type==='learn'?'<span class="tag">Comprendre</span>':l.type==='kb'?'<span class="tag">Au clavier</span>':l.type==='mid'?'<span class="tag">Avec ton clavier</span>':''}<span class="lt ${un?'':'muted'}">${tx(l.t)}</span></div>`});
+   html+=`<div class="node ${fin?'final':''}" style="transform:translateX(${offs[gi%8]}px)"><button class="bubble ${un?'':'locked'} ${isCur?'current':''}" style="background:${fin?'var(--gold)':u.col}" data-lesson="${l.id}" aria-label="${l.t}${un?'':' (verrouillée)'}">${un?(fin?I.crown:l.type==='learn'?I.book:l.type==='kb'||l.type==='mid'?I.keys:(li+1)):I.lock}</button>${starRow(st)}${l.type==='mid'?'<span class="tag">Avec ton clavier</span>':l.opt?'<span class="tag">Facultatif</span>':l.type==='learn'?'<span class="tag">Comprendre</span>':l.type==='kb'?'<span class="tag">Au clavier</span>':l.type==='mid'?'<span class="tag">Avec ton clavier</span>':''}<span class="lt ${un?'':'muted'}">${tx(l.t)}</span></div>`});
   html+=`</div></section>`});
  app.innerHTML=html+tabs('home');midiChipUpdate();
  const cur=app.querySelector('.bubble.current');if(cur&&!renderHome.scrolled){renderHome.scrolled=true;setTimeout(()=>cur.scrollIntoView({block:'center'}),60)}}
@@ -1217,9 +1232,9 @@ async function midiTest(){const out=document.getElementById('midiout');const say
 let MD=null;
 const midAbs=(a,b)=>Math.abs(a-b);
 function startMid(id){const l=LBY[id];MD={l,key:l.song?chalKey(l.song):KEYS[0],metro:false,fin:false,noaid:false,reveal:false};midBuild();drawMid();window.scrollTo(0,0)}
-function midBuild(){const l=MD.l;MD.steps=l.build(MD.key);MD.si=0;MD.wrong=0;MD.wrongTot=0;MD.skipped=0;MD.ok=0;MD.w=0;MD.times=[];MD.bar=null;MD.pend=0;MD.t=0;MD.ei=0;MD.got=new Set();MD.tt=[];midStepReset()}
+function midBuild(){const l=MD.l;MD.heard={};MD.steps=l.build(MD.key);MD.si=0;MD.wrong=0;MD.wrongTot=0;MD.skipped=0;MD.ok=0;MD.w=0;MD.times=[];MD.bar=null;MD.pend=0;MD.t=0;MD.ei=0;MD.got=new Set();MD.tt=[];midStepReset()}
 function midStepReset(){MD.reveal=false;MD.ei=0;MD.got=new Set();MD.cs=0;MD.tt=[];MD.lastDone=0}
-function midHL(st){const out={};if(MD.noaid&&!MD.reveal)return out;const cur=st.ev[MD.ei];if(cur)cur.hl.forEach(x=>{out[x.m]={d:x.d,l:x.d,n:fmt(NN[pc(x.m)])}});return out}
+function midHL(st){const out={};if((MD.noaid||st.listen)&&!MD.reveal)return out;const cur=st.ev[MD.ei];if(cur)cur.hl.forEach(x=>{out[x.m]={d:x.d,l:x.d,n:fmt(NN[pc(x.m)])}});return out}
 function drawMid(){view='mid';const l=MD.l,st=MD.steps[MD.si],u=U[l.unit]||{title:'Chansons'},n=MD.steps.length;
  const ms=MD.steps.flatMap(s=>s.ev.flatMap(e=>e.hl.map(x=>x.m)));const from=Math.floor(Math.min(48,...ms)/12)*12,to=Math.max(72,...ms)+0;
  app.innerHTML=`<div class="qtop"><button class="xbtn" data-act="lquit" aria-label="Quitter">${I.close}</button><div class="bar"><i id="midbar" style="width:${MD.si/n*100}%"></i></div></div>
@@ -1227,13 +1242,14 @@ function drawMid(){view='mid';const l=MD.l,st=MD.steps[MD.si],u=U[l.unit]||{titl
  ${MD.si===0&&MD.ei===0?`<p>${tx(l.intro)}</p>${whyHTML(l.id)}`:''}
  <div class="opt sm" role="group" aria-label="Tonalité">${KEYS.map((x,i)=>`<button data-mk="${i}" aria-pressed="${x===MD.key}">${fmt(x.notes[0])}</button>`).join('')}</div>
  <div id="midichip" class="mchip"></div>
- <div class="card stack" style="gap:6px"><div class="eyebrow">Étape ${MD.si+1} / ${n}</div><p id="midtxt">${tx(MD.noaid&&!MD.reveal&&st.mem?st.mem:st.t)}</p><div id="midbox" class="small"></div></div>
+ <div class="card stack" style="gap:6px"><div class="eyebrow">Étape ${MD.si+1} / ${n}</div><p id="midtxt">${tx((MD.noaid||st.listen)&&!MD.reveal&&st.mem?st.mem:st.t)}</p><div id="midbox" class="small"></div></div>
  <div id="midkb">${kbHTML(midHL(st),{from,to:Math.max(to,from+24)})}</div>
- <div class="lbtns"><button class="lbtn" data-mid="demo">${I.play}Écouter</button>${st.timed?`<button class="lbtn" data-mid="met">${I.play}${MD.metro?'Métronome : actif':'Avec le métronome'}</button>`:''}<button class="lbtn" data-mid="reset">Recommencer l'étape</button>${l.song?`<button class="lbtn" data-mid="aid">${MD.noaid?(MD.reveal?'Cacher l\'aide':'Montrer l\'aide'):'Jouer sans aide'}</button>`:''}</div>
+ <div class="lbtns"><button class="lbtn" data-mid="demo">${I.play}${st.listen?'Réécouter':'Écouter'}</button>${st.timed?`<button class="lbtn" data-mid="met">${I.play}${MD.metro?'Métronome : actif':'Avec le métronome'}</button>`:''}<button class="lbtn" data-mid="reset">Recommencer l'étape</button>${l.song||st.listen?`<button class="lbtn" data-mid="aid">${MD.noaid||st.listen?(MD.reveal?'Cacher l\'aide':'Montrer l\'aide'):'Jouer sans aide'}</button>`:''}</div>
  <div class="tip"><b>Si ça coince.</b> ${tx(l.hint)}</div>
- <button class="btn ghost" data-mid="skip">Passer cette étape</button></div>`;midiChipUpdate();midBox()}
+ <button class="btn ghost" data-mid="skip">Passer cette étape</button></div>`;midiChipUpdate();midBox();
+ if(st.listen&&!MD.heard[MD.si]){MD.heard[MD.si]=1;setTimeout(()=>{if(view==='mid'&&MD&&MD.steps[MD.si]===st)playSeqM(st.cue,st.cueGap||.6)},500)}}
 function midBox(){const el=document.getElementById('midbox');if(!el)return;const st=MD.steps[MD.si];
- const hid=MD.noaid&&!MD.reveal,done=st.ev.map((e,i)=>`<span class="tag" style="${i<MD.ei?'background:var(--good);color:#101010':i===MD.ei&&!hid?'outline:2px solid var(--accent)':''}">${hid?(i<MD.ei?e.lab:'•'):e.lab}</span>`).join(' ');
+ const hid=(MD.noaid||st.listen)&&!MD.reveal,done=st.ev.map((e,i)=>`<span class="tag" style="${i<MD.ei?'background:var(--good);color:#101010':i===MD.ei&&!hid?'outline:2px solid var(--accent)':''}">${hid?(i<MD.ei?e.lab:'•'):e.lab}</span>`).join(' ');
  el.innerHTML=`${done}${MD.wrong?`<div class="muted" style="margin-top:6px">Notes à côté : ${MD.wrong}</div>`:''}${MD.reg!=null?`<div class="muted" style="margin-top:6px">Régularité : ${MD.reg}</div>`:''}`}
 function midNote(m,ts){if(!MD||MD.fin)return;const st=MD.steps[MD.si],ev=st.ev[MD.ei];if(!ev)return;const p=pc(m);
  if(ev.p.length===1){
@@ -1353,9 +1369,9 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
  if(ds.startMid){audio();startMid(ds.startMid);return}
  if(ds.mk!=null&&view==='mid'){MD.key=KEYS[+ds.mk];midBuild();drawMid();return}
  if(ds.mid&&view==='mid'){audio();const st=MD.steps[MD.si];
-  if(ds.mid==='demo'){const seq=st.ev.map(e=>e.hl.map(x=>x.m));playSeqM(seq,st.timed?60/(st.bpm||66)*.8:.7)}
+  if(ds.mid==='demo'){if(st.cue){playSeqM(st.cue,st.cueGap||.6);return}const seq=st.ev.map(e=>e.hl.map(x=>x.m));playSeqM(seq,st.timed?60/(st.bpm||66)*.8:.7)}
   else if(ds.mid==='met'){midMetro();drawMid()}
-  else if(ds.mid==='aid'){if(!MD.noaid){MD.noaid=true;MD.reveal=false}else MD.reveal=!MD.reveal;drawMid()}
+  else if(ds.mid==='aid'){if(!MD.noaid&&!st.listen){MD.noaid=true;MD.reveal=false}else MD.reveal=!MD.reveal;drawMid()}
   else if(ds.mid==='reset'){MD.wrong=0;MD.reg=null;midStepReset();drawMid()}
   else if(ds.mid==='skip'){MD.skipped++;MD.wrongTot+=MD.wrong;if(MD.si>=MD.steps.length-1){midFinish()}else{MD.si++;MD.wrong=0;midStepReset();MD.reg=null;drawMid()}}
   return}
