@@ -576,8 +576,60 @@ const H3={id:'h3',type:'mid',opt:true,t:'À l\'oreille : un air connu',intro:`Tr
 U.find(u=>u.id==='u3').L.push(H2);
 U.find(u=>u.id==='u4').L.push(H1,H3);
 Object.assign(WHY_A,{h1:["Rejouer une mélodie en n'écoutant que ton oreille.","C'est ce que tu fais pour jouer une chanson que tu fredonnes : tu cherches les notes une à une."],h2:["Retrouver une grille d'accords à l'oreille et la jouer.","Repérer les accords d'une chanson, puis les jouer pour t'accompagner."],h3:["Retrouver des airs connus sur ton clavier.","Le même geste que pour jouer à l'oreille une chanson que tu aimes."]});
-U.push(U_A);
-const TRACK={ur:'acc',ua:'acc'};
+
+/* ===================== ACCOMPAGNER : ALLER PLUS LOIN ===================== */
+const romK=(k,d)=>(k.m?ROMM:ROM)[d-1];
+const INVL=['position fondamentale','1er renversement','2e renversement'];
+const invCands=(k,d)=>{const t=chordMidis(k,d).tri,c=[];for(let inv=0;inv<3;inv++){const n=[t[0],t[1],t[2]].map((m,i)=>i<inv?m+12:m).sort((a,b)=>a-b);for(const o of [-12,0,12]){const v=n.map(m=>m+o);if(v[0]>=52&&v[2]<=72)c.push({v,inv})}}return c};
+const voiceChain=(k,ds)=>{const out=[];let prev=null;ds.forEach(d=>{const c=invCands(k,d);let best;
+ if(!prev)best=c.filter(x=>x.inv===0).sort((a,b)=>Math.abs(a.v[1]-62)-Math.abs(b.v[1]-62))[0]||c[0];
+ else best=c.map(x=>({x,s:x.v.reduce((a,m,j)=>a+Math.abs(m-prev[j]),0)})).sort((a,b)=>a.s-b.s)[0].x;
+ out.push(best);prev=best.v});return out};
+const roleOf=(k,d,m)=>{const t=chordMidis(k,d).tri.map(pc);return [1,3,5][t.indexOf(pc(m))]};
+const invHL=(k,d,inv)=>{const x=invCands(k,d).find(y=>y.inv===inv),h={};const nm=cNames(k,d);x.v.forEach(m=>{const r=roleOf(k,d,m);h[m]={d:r,l:r,n:nm[[1,3,5].indexOf(r)]}});return h};
+const invEv=(k,d,x)=>{const nm=cNames(k,d),roles=x.v.map(m=>roleOf(k,d,m));return {p:x.v.map(pc),low:pc(x.v[0]),lowName:nm[[1,3,5].indexOf(roles[0])],hl:x.v.map((m,i)=>({m,d:roles[i]})),lab:chordName(k,d)}};
+const scaleSteps=(k,up)=>{const ds=[1,2,3,4,5,6,7,8],o=up?ds:ds.slice().reverse();return o.map(d=>evNote(degMidi(k,d),d>7?1:d,fmt(k.notes[(d-1)%7])))};
+const G1={id:'g1',type:'mid',t:'Gamme majeure au clavier',intro:`Joue la gamme majeure en montant puis en descendant, dans la tonalité de ton choix. Les touches à jouer s'allument une par une. Pour les doigtés, regarde le cours « Modes majeurs » de Flowkey. Ici, l'objectif est que ta main connaisse la forme de la gamme dans chaque tonalité.`,hint:`Une gamme majeure suit toujours la même formule : ton, ton, demi-ton, ton, ton, ton, demi-ton. Joue lentement, avec le métronome si tu veux.`,
+ build:k=>[{t:`${keyName(k)} en montant : ${k.notes.map(fmt).join(' – ')} – ${fmt(k.notes[0])}.`,ev:scaleSteps(k,true),timed:true,bpm:60},{t:`${keyName(k)} en descendant : retour à ${fmt(k.notes[0])}.`,ev:scaleSteps(k,false),timed:true,bpm:60}]};
+const A9={id:'a9',type:'learn',t:'Les renversements',pages:[
+ {t:'Le problème : les sauts',pick:true,h:k=>`Si tu joues chaque accord avec la fondamentale en bas, ta main saute d'un accord à l'autre : ${chordName(k,1)}, puis ${chordName(k,4)}, puis ${chordName(k,5)}. C'est lent et ça sonne haché. Écoute la différence entre sauter et rester en place.`,kb:k=>chordHL(k,1),demos:[{l:'Accords qui sautent',run:k=>playSeqM([1,4,5,1].map(d=>chordMidis(k,d).tri),.9)},{l:'Accords sur place',run:k=>playSeqM(voiceChain(k,[1,4,5,1]).map(x=>x.v),.9)}]},
+ {t:'Le renversement',pick:true,sel:[{v:0,l:'Fondamentale'},{v:1,l:'1er renversement'},{v:2,l:'2e renversement'}],h:(k,s)=>`Un <b>renversement</b>, c'est le même accord avec une autre note en bas. Ici ${chordName(k,1)} : <b>${INVL[s]}</b>. Les trois notes sont les mêmes, seul l'ordre change. Fondamentale en bas : position fondamentale. Tierce en bas : 1er renversement. Quinte en bas : 2e renversement.`,kb:(k,s)=>invHL(k,1,s),demos:[{l:'Écouter',run:(k,s)=>{const x=invCands(k,1).find(y=>y.inv===s);playSeqM([x.v],1.4)}}]},
+ {t:'La règle : bouger le moins possible',pick:true,h:k=>`Quand l'accord change, joue le renversement le plus proche de l'accord précédent : une ou deux notes bougent, les autres restent. Ici : ${chordName(k,1)} puis ${chordName(k,4)}.`,kb:k=>{const vc=voiceChain(k,[1,4]);return invHL(k,4,vc[1].inv)},demos:[{l:'I puis IV, sur place',run:k=>playSeqM(voiceChain(k,[1,4]).map(x=>x.v),1)}],tip:`La main reste au même endroit du clavier : tu peux alors regarder ailleurs, chanter, ou jouer la basse de l'autre main.`}],
+ qs:[
+  {q:`Qu'est-ce qu'un renversement ?`,o:[`Le même accord, avec une autre note en bas`,`Un accord mineur`,`Un accord joué plus fort`,`Un accord de deux notes`],w:`Les trois notes sont les mêmes, seul l'ordre change.`},
+  {q:`Pourquoi renverser un accord ?`,o:[`Pour que la main bouge le moins possible d'un accord à l'autre`,`Pour changer sa couleur`,`Pour jouer plus fort`,`Pour changer de tonalité`],w:`Le renversement le plus proche de l'accord précédent évite les sauts.`},
+  {q:`La fondamentale est la note du bas : c'est…`,o:[`La position fondamentale`,`Le 1er renversement`,`Le 2e renversement`,`Un accord de septième`],w:`Fondamentale en bas = position fondamentale.`},
+  {q:`La tierce est la note du bas : c'est…`,o:[`Le 1er renversement`,`La position fondamentale`,`Le 2e renversement`,`Un accord mineur`],w:`Tierce en bas : 1er renversement. Quinte en bas : 2e renversement.`}]};
+const A10={id:'a10',type:'mid',t:'Accords renversés en grille',intro:`Joue une grille de 4 accords en gardant la main en place : chaque accord est renversé pour rester proche du précédent. L'app vérifie les notes et le renversement (la note la plus basse). Les touches s'allument.`,hint:`Regarde quelle note reste au même endroit d'un accord à l'autre : elle ne bouge pas, seules les autres se déplacent.`,
+ build:k=>[[1,5,6,4],[1,4,5,1],[1,6,4,5]].map(ds=>{const vc=voiceChain(k,ds);return {t:`${ds.map(d=>romK(k,d)).join(' – ')} en ${keyName(k)} : ${vc.map((x,i)=>chordName(k,ds[i])+' ('+INVL[x.inv]+')').join(', ')}.`,ev:vc.map((x,i)=>invEv(k,ds[i],x))}})};
+const G2={id:'a11',type:'mid',keys:MKEYS,t:'Gamme mineure au clavier',intro:`La gamme mineure naturelle : même exercice, avec la couleur sombre. Choisis une tonalité mineure, joue en montant puis en descendant. Regarde le cours « Modes mineurs » de Flowkey pour les doigtés.`,hint:`Formule : ton, demi-ton, ton, ton, demi-ton, ton, ton. Compare avec le majeur : la 3e, la 6e et la 7e notes sont plus basses d'un demi-ton.`,
+ build:k=>[{t:`${keyName(k)} en montant : ${k.notes.map(fmt).join(' – ')} – ${fmt(k.notes[0])}.`,ev:scaleSteps(k,true),timed:true,bpm:60},{t:`${keyName(k)} en descendant : retour à ${fmt(k.notes[0])}.`,ev:scaleSteps(k,false),timed:true,bpm:60}]};
+const A12={id:'a12',type:'mid',keys:MKEYS,t:'Arpèges mineurs',intro:`Les arpèges 1 – 3 – 5 – 3 sur les accords du mineur : i, iv et v, puis la grille i – iv – v – i. Le geste est le même qu'en majeur, mais la tierce est plus basse d'un demi-ton.`,hint:`Joue lentement. La tierce est la note du milieu de l'accord : elle donne la couleur triste.`,
+ build:k=>[...[1,4,5].map(d=>{const ev=arpEv(k,d,[0,1,2,1]);return {t:`${romK(k,d)} (${chordName(k,d)}) : joue ${ev.map(e=>e.lab).join(' – ')}, une note à la fois.`,ev,timed:true,bpm:66}}),{t:`La grille ${[1,4,5,1].map(d=>romK(k,d)).join(' – ')} en ${keyName(k)} : arpège 1 – 3 – 5 – 3 sur chaque accord.`,ev:[1,4,5,1].flatMap(d=>arpEv(k,d,[0,1,2,1])),timed:true,bpm:66}]};
+const scHL=k=>{const h={};[1,2,3,4,5,6,7,8].forEach(d=>{h[degMidi(k,d)]={d:d>7?1:d,l:d>7?1:d,n:fmt(k.notes[(d-1)%7])}});return h};
+const A13={id:'a13',type:'learn',t:'Improviser sur une grille',pages:[
+ {t:'Les notes de la gamme',pick:true,h:k=>`Improviser, c'est inventer une mélodie sur une grille d'accords. Règle simple : reste dans les notes de la gamme de la tonalité, et ça sonne juste sur tous les accords. En ${keyName(k)} : ${k.notes.map(fmt).join(' – ')}.`,kb:k=>scHL(k),demos:[{l:'La gamme',run:k=>playSeqM([1,2,3,4,5,6,7,8].map(d=>degMidi(k,d)),.35)}]},
+ {t:'Où se poser',pick:true,sel:SELCH([1,5,6,4]),h:(k,s)=>`Sur l'accord ${ROM[s-1]} (${chordName(k,s)}), les notes les plus stables sont celles de l'accord : ${cNames(k,s).join(' – ')}. Termine ta phrase sur l'une d'elles. Les autres notes de la gamme servent au mouvement.`,kb:(k,s)=>chordHL(k,s),demos:[{l:'Accord',run:(k,s)=>playSeqM([chordMidis(k,s).tri],1.6)}]},
+ {t:'Trois conseils',h:`1) Commence par peu de notes. 2) Répète une petite idée en la changeant un peu. 3) Laisse des silences : une mélodie respire.`,tip:`C'est le même travail que pour jouer à l'oreille : tu cherches ce qui sonne bien, note par note.`}],
+ qs:[
+  {q:`Quelles notes sont sûres pour improviser sur une grille en Do majeur ?`,o:[`Les notes de la gamme de Do majeur`,`N'importe quelle touche`,`Seulement les touches noires`,`Seulement la note Do`],w:`Les notes de la gamme (en Do, les touches blanches) sonnent juste sur tous les accords de la tonalité.`},
+  {q:`Où te poser pour finir ta phrase ?`,o:[`Sur une note de l'accord qui joue`,`Sur une note hors gamme`,`Sur la plus haute note du clavier`,`N'importe où`],w:`Les notes de l'accord sonnent le plus stables : c'est là qu'on se pose.`},
+  {q:`Quand l'accord change, que faire ?`,o:[`Garder la gamme, et viser une note du nouvel accord`,`Changer de tonalité`,`S'arrêter`,`Jouer plus vite`],w:`La gamme reste la même, c'est la note d'appui qui change avec l'accord.`},
+  {q:`Par quoi commencer pour improviser ?`,o:[`Quelques notes seulement, en répétant une petite idée`,`Une longue suite très rapide`,`Toutes les notes en même temps`,`Une mélodie apprise par cœur`],w:`Peu de notes, bien placées : c'est plus musical qu'une suite de notes rapides.`}]};
+const impEv=(k,d)=>{const h=Object.values(scHL(k)),hl=Object.keys(scHL(k)).map(Number).map(m=>({m,d:scHL(k)[m].d}));return {any:4,p:k.notes.map((n,i)=>pc(degMidi(k,i+1))),hl,bk:[bassMidi(k,d),...chordMidis(k,d).tri],lab:chordName(k,d)}};
+const A14={id:'a14',type:'mid',t:'Improviser au clavier',intro:`L'app joue un accord, tu improvises 4 notes de la gamme dessus (les touches de la gamme sont allumées), puis l'accord suivant arrive. Termine chaque accord sur une note de l'accord (celles qui sonnent le plus stable) : c'est un conseil, l'app valide toute note de la gamme.`,hint:`Commence par jouer lentement 4 notes qui montent ou descendent. « Écouter » rejoue l'accord en cours.`,
+ build:k=>[[1,5,6,4],[1,4,5,1]].map(ds=>({t:`Grille ${ds.map(d=>ROM[d-1]).join(' – ')} en ${keyName(k)} (${ds.map(d=>chordName(k,d)).join(' – ')}). Pour chaque accord, joue 4 notes de la gamme.`,ev:ds.map(d=>impEv(k,d))}))};
+const U_B={id:'ub',title:'Accompagner : aller plus loin',goal:'Accompagnement',col:'#20c997',desc:'Passer d\'un accord à l\'autre sans sauter, le mode mineur au clavier, puis inventer une mélodie sur une grille.',L:[A9,A10,G2,A12,A13,A14]};
+U_A.L.splice(1,0,G1);
+Object.assign(WHY_A,{g1:["Connaître la forme de la gamme majeure sous tes doigts, dans plusieurs tonalités.","Toutes les mélodies et les accords sortent d'une gamme : la main doit la connaître."],
+ a9:["Comprendre le renversement : le même accord, une autre note en bas.","Sans renversement, la main saute à chaque accord et tu ne peux plus chanter ni regarder ailleurs."],
+ a10:["Jouer une grille en gardant la main en place.","C'est ce qui rend un accompagnement fluide."],
+ a11:["Jouer la gamme mineure au clavier.","Beaucoup de chansons sont en mineur : ta main doit reconnaître cette forme."],
+ a12:["Jouer des arpèges sur les accords du mineur.","Mêmes motifs qu'en majeur, couleur plus sombre."],
+ a13:["Comprendre comment inventer une mélodie sur une grille.","Improviser, c'est jouer ce que tu entends dans ta tête, en restant dans la tonalité."],
+ a14:["Inventer 4 notes sur chaque accord d'une grille.","Tu joues à l'oreille ce qui sonne bien : c'est le but de tout le parcours."]});
+U.push(U_A);U.push(U_B);
+const TRACK={ur:'acc',ua:'acc',ub:'acc'};
 U.forEach(u=>{u.track=TRACK[u.id]||'ear'});
 ['ear','acc'].forEach(t=>{let n=0;U.forEach(u=>{if(u.track===t)u.n=++n})});
 const LESSONS=[];U.forEach((u,ui)=>u.L.forEach(l=>{l.unit=ui;LESSONS.push(l)}));
@@ -1231,38 +1283,43 @@ async function midiTest(){const out=document.getElementById('midiout');const say
  MIDI.onTest=(n,src)=>{if(src==='midi')say('Note reçue : '+NN[n%12]+(Math.floor(n/12)-1)+' (MIDI '+n+'). Ça marche !')}}
 let MD=null;
 const midAbs=(a,b)=>Math.abs(a-b);
-function startMid(id){const l=LBY[id];MD={l,key:l.song?chalKey(l.song):KEYS[0],metro:false,fin:false,noaid:false,reveal:false};midBuild();drawMid();window.scrollTo(0,0)}
+function startMid(id){const l=LBY[id];MD={l,key:l.song?chalKey(l.song):(l.keys||KEYS)[0],metro:false,fin:false,noaid:false,reveal:false};midBuild();drawMid();window.scrollTo(0,0)}
 function midBuild(){const l=MD.l;MD.heard={};MD.steps=l.build(MD.key);MD.si=0;MD.wrong=0;MD.wrongTot=0;MD.skipped=0;MD.ok=0;MD.w=0;MD.times=[];MD.bar=null;MD.pend=0;MD.t=0;MD.ei=0;MD.got=new Set();MD.tt=[];midStepReset()}
-function midStepReset(){MD.reveal=false;MD.ei=0;MD.got=new Set();MD.cs=0;MD.tt=[];MD.lastDone=0}
+function midStepReset(){MD.cnt=0;MD.gm={};MD.msg='';MD.reveal=false;MD.ei=0;MD.got=new Set();MD.cs=0;MD.tt=[];MD.lastDone=0}
 function midHL(st){const out={};if((MD.noaid||st.listen)&&!MD.reveal)return out;const cur=st.ev[MD.ei];if(cur)cur.hl.forEach(x=>{out[x.m]={d:x.d,l:x.d,n:fmt(NN[pc(x.m)])}});return out}
 function drawMid(){view='mid';const l=MD.l,st=MD.steps[MD.si],u=U[l.unit]||{title:'Chansons'},n=MD.steps.length;
  const ms=MD.steps.flatMap(s=>s.ev.flatMap(e=>e.hl.map(x=>x.m)));const from=Math.floor(Math.min(48,...ms)/12)*12,to=Math.max(72,...ms)+0;
  app.innerHTML=`<div class="qtop"><button class="xbtn" data-act="lquit" aria-label="Quitter">${I.close}</button><div class="bar"><i id="midbar" style="width:${MD.si/n*100}%"></i></div></div>
  <div class="stack learn"><div><span class="eyebrow">Avec ton clavier · ${tx(u.title)}</span><h1 style="font-size:26px;margin-top:4px">${tx(l.t)}</h1></div>
  ${MD.si===0&&MD.ei===0?`<p>${tx(l.intro)}</p>${whyHTML(l.id)}`:''}
- <div class="opt sm" role="group" aria-label="Tonalité">${KEYS.map((x,i)=>`<button data-mk="${i}" aria-pressed="${x===MD.key}">${fmt(x.notes[0])}</button>`).join('')}</div>
+ <div class="opt sm" role="group" aria-label="Tonalité">${(l.keys||KEYS).map((x,i)=>`<button data-mk="${i}" aria-pressed="${x===MD.key}">${fmt(x.notes[0])}</button>`).join('')}</div>
  <div id="midichip" class="mchip"></div>
  <div class="card stack" style="gap:6px"><div class="eyebrow">Étape ${MD.si+1} / ${n}</div><p id="midtxt">${tx((MD.noaid||st.listen)&&!MD.reveal&&st.mem?st.mem:st.t)}</p><div id="midbox" class="small"></div></div>
  <div id="midkb">${kbHTML(midHL(st),{from,to:Math.max(to,from+24)})}</div>
  <div class="lbtns"><button class="lbtn" data-mid="demo">${I.play}${st.listen?'Réécouter':'Écouter'}</button>${st.timed?`<button class="lbtn" data-mid="met">${I.play}${MD.metro?'Métronome : actif':'Avec le métronome'}</button>`:''}<button class="lbtn" data-mid="reset">Recommencer l'étape</button>${l.song||st.listen?`<button class="lbtn" data-mid="aid">${MD.noaid||st.listen?(MD.reveal?'Cacher l\'aide':'Montrer l\'aide'):'Jouer sans aide'}</button>`:''}</div>
  <div class="tip"><b>Si ça coince.</b> ${tx(l.hint)}</div>
  <button class="btn ghost" data-mid="skip">Passer cette étape</button></div>`;midiChipUpdate();midBox();
- if(st.listen&&!MD.heard[MD.si]){MD.heard[MD.si]=1;setTimeout(()=>{if(view==='mid'&&MD&&MD.steps[MD.si]===st)playSeqM(st.cue,st.cueGap||.6)},500)}}
+ if(st.listen&&!MD.heard[MD.si]){MD.heard[MD.si]=1;setTimeout(()=>{if(view==='mid'&&MD&&MD.steps[MD.si]===st)playSeqM(st.cue,st.cueGap||.6)},500)}
+ midBk(st)}
 function midBox(){const el=document.getElementById('midbox');if(!el)return;const st=MD.steps[MD.si];
- const hid=(MD.noaid||st.listen)&&!MD.reveal,done=st.ev.map((e,i)=>`<span class="tag" style="${i<MD.ei?'background:var(--good);color:#101010':i===MD.ei&&!hid?'outline:2px solid var(--accent)':''}">${hid?(i<MD.ei?e.lab:'•'):e.lab}</span>`).join(' ');
- el.innerHTML=`${done}${MD.wrong?`<div class="muted" style="margin-top:6px">Notes à côté : ${MD.wrong}</div>`:''}${MD.reg!=null?`<div class="muted" style="margin-top:6px">Régularité : ${MD.reg}</div>`:''}`}
+ const hid=(MD.noaid||st.listen)&&!MD.reveal,done=st.ev.map((e,i)=>`<span class="tag" style="${i<MD.ei?'background:var(--good);color:#101010':i===MD.ei&&!hid?'outline:2px solid var(--accent)':''}">${hid?(i<MD.ei?e.lab:'•'):e.lab+(i===MD.ei&&e.any?' '+(MD.cnt||0)+'/'+e.any:'')}</span>`).join(' ');
+ el.innerHTML=`${done}${MD.msg?`<div style="margin-top:6px;color:var(--gold)">${MD.msg}</div>`:''}${MD.wrong?`<div class="muted" style="margin-top:6px">Notes à côté : ${MD.wrong}</div>`:''}${MD.reg!=null?`<div class="muted" style="margin-top:6px">Régularité : ${MD.reg}</div>`:''}`}
 function midNote(m,ts){if(!MD||MD.fin)return;const st=MD.steps[MD.si],ev=st.ev[MD.ei];if(!ev)return;const p=pc(m);
+ if(ev.any){if(ev.p.includes(p)){MD.cnt=(MD.cnt||0)+1;if(MD.cnt>=ev.any){MD.tt.push(ts);midEvDone(ts)}else midBox()}else{MD.wrong++;midBox()}return}
  if(ev.p.length===1){
   if(p===ev.p[0]){MD.tt.push(ts);midEvDone(ts)}
   else{if(MD.lastDone&&ts-MD.lastDone<800)return;MD.wrong++;midBox()}
  }else{
-  if(ev.p.includes(p)){if(!MD.got.size)MD.cs=ts;if(ts-MD.cs>1500){MD.got=new Set();MD.cs=ts}MD.got.add(p);
-   if(MD.got.size===ev.p.length){MD.tt.push(ts);midEvDone(ts)}}
+  if(ev.p.includes(p)){if(!MD.got.size)MD.cs=ts;if(ts-MD.cs>1500){MD.got=new Set();MD.cs=ts;MD.gm={}}MD.got.add(p);MD.gm=MD.gm||{};MD.gm[p]=m;
+   if(MD.got.size===ev.p.length){
+    if(ev.low!=null){const lo=Math.min(...Object.values(MD.gm));if(pc(lo)!==ev.low){MD.wrong++;MD.msg='Les notes sont bonnes, mais pas dans le bon renversement : la note la plus basse doit être '+ev.lowName+'.';MD.got=new Set();MD.gm={};midBox();return}}
+    MD.tt.push(ts);midEvDone(ts)}}
   else{if(MD.lastDone&&ts-MD.lastDone<800)return;MD.wrong++;MD.got=new Set();midBox()}}}
-function midEvDone(ts){MD.lastDone=ts;MD.got=new Set();MD.ei++;const st=MD.steps[MD.si];
+function midEvDone(ts){MD.lastDone=ts;MD.got=new Set();MD.gm={};MD.cnt=0;MD.msg='';MD.ei++;const st=MD.steps[MD.si];
  if(MD.ei>=st.ev.length){MD.ok++;midStepDone(st);return}
  const kb=document.getElementById('midkb');if(kb){const ms=MD.steps.flatMap(s=>s.ev.flatMap(e=>e.hl.map(x=>x.m)));const from=Math.floor(Math.min(48,...ms)/12)*12;kb.innerHTML=kbHTML(midHL(st),{from,to:Math.max(72,...ms,from+24)})}
- midBox()}
+ midBox();midBk(st)}
+function midBk(st){const e=st.ev[MD.ei];if(e&&e.bk)setTimeout(()=>{if(view==='mid'&&MD&&MD.steps[MD.si]===st&&st.ev[MD.ei]===e)playSeqM([e.bk],2.2)},250)}
 function midStepDone(st){MD.wrongTot+=MD.wrong;
  if(MD.metro&&st.timed&&MD.tt.length>2){const bt=60000/(st.bpm||66);let sum=0;for(let i=1;i<MD.tt.length;i++)sum+=Math.abs((MD.tt[i]-MD.tt[i-1])-bt);const avg=sum/(MD.tt.length-1);MD.reg=avg<bt*.15?'très régulier':avg<bt*.3?'plutôt régulier':'irrégulier : ralentis et compte les temps'}
  else MD.reg=null;
@@ -1367,9 +1424,9 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
  if(ds.trk){S.tr=ds.trk;save();renderHome.scrolled=false;renderHome();window.scrollTo(0,0);return}
  if(ds.song){startSong(ds.song);window.scrollTo(0,0);return}
  if(ds.startMid){audio();startMid(ds.startMid);return}
- if(ds.mk!=null&&view==='mid'){MD.key=KEYS[+ds.mk];midBuild();drawMid();return}
+ if(ds.mk!=null&&view==='mid'){MD.key=(MD.l.keys||KEYS)[+ds.mk];midBuild();drawMid();return}
  if(ds.mid&&view==='mid'){audio();const st=MD.steps[MD.si];
-  if(ds.mid==='demo'){if(st.cue){playSeqM(st.cue,st.cueGap||.6);return}const seq=st.ev.map(e=>e.hl.map(x=>x.m));playSeqM(seq,st.timed?60/(st.bpm||66)*.8:.7)}
+  if(ds.mid==='demo'){const ce=st.ev[MD.ei];if(ce&&ce.bk){playSeqM([ce.bk],2.2);return}if(st.cue){playSeqM(st.cue,st.cueGap||.6);return}const seq=st.ev.map(e=>e.hl.map(x=>x.m));playSeqM(seq,st.timed?60/(st.bpm||66)*.8:.7)}
   else if(ds.mid==='met'){midMetro();drawMid()}
   else if(ds.mid==='aid'){if(!MD.noaid&&!st.listen){MD.noaid=true;MD.reveal=false}else MD.reveal=!MD.reveal;drawMid()}
   else if(ds.mid==='reset'){MD.wrong=0;MD.reg=null;midStepReset();drawMid()}
