@@ -526,7 +526,7 @@ const DROP=new Set(['1d', '1e', '1f', '1g', '5a', '5b', '5c', '5d', '5e', 'v1', 
 const pc=m=>((m%12)+12)%12;
 const bassMidi=(k,d)=>{let b=chordMidis(k,d).bass;while(b<48)b+=12;while(b>59)b-=12;return b};
 const triM=(k,d)=>chordMidis(k,d).tri;
-const cNames=(k,d)=>{const nm=[fmt(k.notes[d-1]),fmt(k.notes[(d+1)%7]),fmt(k.notes[(d+3)%7])];return nm};
+const cNames=(k,d)=>d<=7?[fmt(k.notes[d-1]),fmt(k.notes[(d+1)%7]),fmt(k.notes[(d+3)%7])]:chordMidis(k,d).tri.map((m,i)=>i===0?fmt(B7[k.id]):fmt(NN[pc(m)]));
 const evNote=(m,d,lab)=>({p:[pc(m)],hl:[{m,d}],lab});
 const evChord=(ms,lab)=>({p:ms.map(pc),hl:ms.map((m,i)=>({m,d:[1,3,5][i]})),lab});
 const midChordSteps=ds=>k=>ds.map(d=>({t:`${ROM[d-1]} : joue l'accord ${chordName(k,d)} (${cNames(k,d).join(' – ')}), les trois notes ensemble.`,ev:[evChord(triM(k,d),chordName(k,d))]}));
@@ -710,15 +710,15 @@ function topbar(){const lv=level();return `<div class="topbar"><span class="pill
 function ring(v,max){const p=Math.min(1,v/max),r=34,c=2*Math.PI*r;return `<svg class="ring" viewBox="0 0 82 82"><circle cx="41" cy="41" r="${r}" fill="none" stroke="var(--surface2)" stroke-width="10"/><circle cx="41" cy="41" r="${r}" fill="none" stroke="${p>=1?'var(--good)':'var(--accent)'}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${c*(1-p)}" transform="rotate(-90 41 41)"/><text x="41" y="47" text-anchor="middle" fill="var(--fg)" font-family="Bricolage Grotesque, sans-serif" font-weight="800" font-size="18">${Math.round(p*100)}%</text></svg>`}
 function starRow(n,size=''){return `<span class="stars">${[0,1,2].map(i=>I.star(i<n?'var(--gold)':'var(--surface2)')).join('')}</span>`}
 
-function trackSel(tr){return `<div class="seg" role="group" aria-label="Parcours"><button data-trk="ear" aria-pressed="${tr==='ear'}">Oreille</button><button data-trk="acc" aria-pressed="${tr==='acc'}">Accompagner</button></div>`}
+function trackSel(tr){return `<div class="seg" role="group" aria-label="Parcours"><button data-trk="ear" aria-pressed="${tr==='ear'}">Oreille</button><button data-trk="acc" aria-pressed="${tr==='acc'}">Accompagner</button><button data-trk="song" aria-pressed="${tr==='song'}">Chansons</button></div>`}
 function accTop(){const lock=!S.free&&!passed('3d');
  return `<div class="card stack" style="gap:8px"><div class="eyebrow">Parcours Accompagner</div><h2>Jouer les accords avec tes deux mains</h2><p class="muted small">Rythme, accords plaqués, basse, arpèges, puis grille complète. Les leçons « Avec ton clavier » écoutent ton clavier MIDI et vérifient tes notes. Sans clavier branché, joue sur le clavier à l'écran.</p><div id="midichip" class="mchip"></div>${lock?`<p class="small" style="color:var(--gold)">Termine d'abord l'unité 4 du parcours Oreille (enchaînements d'accords) pour débloquer ces leçons. Tu peux aussi activer le mode libre dans les réglages.</p>`:''}</div>${chalCard()}`}
 function renderHome(){view='home';const tc=todayCount(),g=goalQ();
  const tr=S.tr||'ear',curIdx=LESSONS.findIndex((l,i)=>U[l.unit].track===tr&&unlocked(i)&&!passed(l.id)&&!l.opt);
  const offs=[0,48,72,48,0,-48,-72,-48];
- let html=topbar()+`<div class="stack">${trackSel(tr)}${tr==='acc'?accTop():''}
- <div class="card daily"${tr==='acc'?' hidden':''}>${ring(tc,g)}<div class="stack" style="gap:8px"><div><div class="eyebrow">Objectif du jour · ${S.minutes} min</div><h3>${tc>=g?'Objectif atteint, bravo !':`${tc} / ${g} réponses`}</h3></div><button class="btn" data-act="daily">Séance du jour</button></div></div>
- <div class="card goalcard stack"${tr==='acc'?' hidden':''} style="gap:8px"><div class="eyebrow">Objectif final</div><h2>${RANKS[Math.min(U.length,RANKS.length-1)]}</h2><p class="muted small">Retrouver la mélodie et les accords d'une chanson pop simple, dans n'importe quelle tonalité, pour la jouer et t'accompagner au chant. Tu y arrives avec la théorie (Comprendre), l'oreille et des défis au clavier.</p><div class="row small"><span class="muted">${LESSONS.filter(l=>passed(l.id)).length} / ${LESSONS.length} leçons réussies</span></div></div></div>`;
+ let html=topbar()+`<div class="stack">${trackSel(tr)}${tr==='acc'?accTop():tr==='song'?songsView():''}
+ <div class="card daily"${tr!=='ear'?' hidden':''}>${ring(tc,g)}<div class="stack" style="gap:8px"><div><div class="eyebrow">Objectif du jour · ${S.minutes} min</div><h3>${tc>=g?'Objectif atteint, bravo !':`${tc} / ${g} réponses`}</h3></div><button class="btn" data-act="daily">Séance du jour</button></div></div>
+ <div class="card goalcard stack"${tr!=='ear'?' hidden':''} style="gap:8px"><div class="eyebrow">Objectif final</div><h2>${RANKS[Math.min(U.length,RANKS.length-1)]}</h2><p class="muted small">Retrouver la mélodie et les accords d'une chanson pop simple, dans n'importe quelle tonalité, pour la jouer et t'accompagner au chant. Tu y arrives avec la théorie (Comprendre), l'oreille et des défis au clavier.</p><div class="row small"><span class="muted">${LESSONS.filter(l=>passed(l.id)).length} / ${LESSONS.length} leçons réussies</span></div></div></div>`;
  U.forEach((u,ui)=>{if(u.track!==tr)return;html+=`<section class="unit"><div class="unithead" style="background:${u.col}"><div class="eyebrow">Unité ${u.n} · ${u.goal}</div><h3>${u.title}</h3><p class="small" style="color:rgba(18,15,34,.8)">${u.desc}</p></div><div class="path">`;
   u.L.forEach((l,li)=>{const gi=LESSONS.indexOf(l),un=unlocked(gi),st=S.lessons[l.id]?.stars||0,isCur=gi===curIdx,fin=l.type==='mix';
    html+=`<div class="node ${fin?'final':''}" style="transform:translateX(${offs[gi%8]}px)"><button class="bubble ${un?'':'locked'} ${isCur?'current':''}" style="background:${fin?'var(--gold)':u.col}" data-lesson="${l.id}" aria-label="${l.t}${un?'':' (verrouillée)'}">${un?(fin?I.crown:l.type==='learn'?I.book:l.type==='kb'||l.type==='mid'?I.keys:(li+1)):I.lock}</button>${starRow(st)}${l.opt?'<span class="tag">Facultatif</span>':l.type==='learn'?'<span class="tag">Comprendre</span>':l.type==='kb'?'<span class="tag">Au clavier</span>':l.type==='mid'?'<span class="tag">Avec ton clavier</span>':''}<span class="lt ${un?'':'muted'}">${tx(l.t)}</span></div>`});
@@ -1216,25 +1216,24 @@ async function midiTest(){const out=document.getElementById('midiout');const say
  MIDI.onTest=(n,src)=>{if(src==='midi')say('Note reçue : '+NN[n%12]+(Math.floor(n/12)-1)+' (MIDI '+n+'). Ça marche !')}}
 let MD=null;
 const midAbs=(a,b)=>Math.abs(a-b);
-function startMid(id){const l=LBY[id];MD={l,key:KEYS[0],metro:false,fin:false};midBuild();drawMid();window.scrollTo(0,0)}
+function startMid(id){const l=LBY[id];MD={l,key:l.song?chalKey(l.song):KEYS[0],metro:false,fin:false,noaid:false,reveal:false};midBuild();drawMid();window.scrollTo(0,0)}
 function midBuild(){const l=MD.l;MD.steps=l.build(MD.key);MD.si=0;MD.wrong=0;MD.wrongTot=0;MD.skipped=0;MD.ok=0;MD.w=0;MD.times=[];MD.bar=null;MD.pend=0;MD.t=0;MD.ei=0;MD.got=new Set();MD.tt=[];midStepReset()}
-function midStepReset(){MD.ei=0;MD.got=new Set();MD.cs=0;MD.tt=[];MD.lastDone=0}
-function midHL(st){const h={};st.ev.forEach((e,i)=>e.hl.forEach(x=>{const c={d:x.d,l:i===MD.ei?(x.d):'',n:fmt(NN[pc(x.m)])};if(!h[x.m]||i>=MD.ei)h[x.m]=c}));
- const cur=st.ev[MD.ei];const out={};if(cur)cur.hl.forEach(x=>{out[x.m]={d:x.d,l:x.d,n:fmt(NN[pc(x.m)])}});return out}
-function drawMid(){view='mid';const l=MD.l,st=MD.steps[MD.si],u=U[l.unit],n=MD.steps.length;
+function midStepReset(){MD.reveal=false;MD.ei=0;MD.got=new Set();MD.cs=0;MD.tt=[];MD.lastDone=0}
+function midHL(st){const out={};if(MD.noaid&&!MD.reveal)return out;const cur=st.ev[MD.ei];if(cur)cur.hl.forEach(x=>{out[x.m]={d:x.d,l:x.d,n:fmt(NN[pc(x.m)])}});return out}
+function drawMid(){view='mid';const l=MD.l,st=MD.steps[MD.si],u=U[l.unit]||{title:'Chansons'},n=MD.steps.length;
  const ms=MD.steps.flatMap(s=>s.ev.flatMap(e=>e.hl.map(x=>x.m)));const from=Math.floor(Math.min(48,...ms)/12)*12,to=Math.max(72,...ms)+0;
  app.innerHTML=`<div class="qtop"><button class="xbtn" data-act="lquit" aria-label="Quitter">${I.close}</button><div class="bar"><i id="midbar" style="width:${MD.si/n*100}%"></i></div></div>
  <div class="stack learn"><div><span class="eyebrow">Avec ton clavier · ${tx(u.title)}</span><h1 style="font-size:26px;margin-top:4px">${tx(l.t)}</h1></div>
  ${MD.si===0&&MD.ei===0?`<p>${tx(l.intro)}</p>${whyHTML(l.id)}`:''}
- <div class="opt sm" role="group" aria-label="Tonalité">${KEYS.slice(0,4).map((x,i)=>`<button data-mk="${i}" aria-pressed="${x===MD.key}">${fmt(x.notes[0])}</button>`).join('')}</div>
+ <div class="opt sm" role="group" aria-label="Tonalité">${KEYS.map((x,i)=>`<button data-mk="${i}" aria-pressed="${x===MD.key}">${fmt(x.notes[0])}</button>`).join('')}</div>
  <div id="midichip" class="mchip"></div>
- <div class="card stack" style="gap:6px"><div class="eyebrow">Étape ${MD.si+1} / ${n}</div><p id="midtxt">${tx(st.t)}</p><div id="midbox" class="small"></div></div>
+ <div class="card stack" style="gap:6px"><div class="eyebrow">Étape ${MD.si+1} / ${n}</div><p id="midtxt">${tx(MD.noaid&&!MD.reveal&&st.mem?st.mem:st.t)}</p><div id="midbox" class="small"></div></div>
  <div id="midkb">${kbHTML(midHL(st),{from,to:Math.max(to,from+24)})}</div>
- <div class="lbtns"><button class="lbtn" data-mid="demo">${I.play}Écouter</button>${st.timed?`<button class="lbtn" data-mid="met">${I.play}${MD.metro?'Métronome : actif':'Avec le métronome'}</button>`:''}<button class="lbtn" data-mid="reset">Recommencer l'étape</button></div>
+ <div class="lbtns"><button class="lbtn" data-mid="demo">${I.play}Écouter</button>${st.timed?`<button class="lbtn" data-mid="met">${I.play}${MD.metro?'Métronome : actif':'Avec le métronome'}</button>`:''}<button class="lbtn" data-mid="reset">Recommencer l'étape</button>${l.song?`<button class="lbtn" data-mid="aid">${MD.noaid?(MD.reveal?'Cacher l\'aide':'Montrer l\'aide'):'Jouer sans aide'}</button>`:''}</div>
  <div class="tip"><b>Si ça coince.</b> ${tx(l.hint)}</div>
  <button class="btn ghost" data-mid="skip">Passer cette étape</button></div>`;midiChipUpdate();midBox()}
 function midBox(){const el=document.getElementById('midbox');if(!el)return;const st=MD.steps[MD.si];
- const done=st.ev.map((e,i)=>`<span class="tag" style="${i<MD.ei?'background:var(--good);color:#101010':i===MD.ei?'outline:2px solid var(--accent)':''}">${e.lab}</span>`).join(' ');
+ const hid=MD.noaid&&!MD.reveal,done=st.ev.map((e,i)=>`<span class="tag" style="${i<MD.ei?'background:var(--good);color:#101010':i===MD.ei&&!hid?'outline:2px solid var(--accent)':''}">${hid?(i<MD.ei?e.lab:'•'):e.lab}</span>`).join(' ');
  el.innerHTML=`${done}${MD.wrong?`<div class="muted" style="margin-top:6px">Notes à côté : ${MD.wrong}</div>`:''}${MD.reg!=null?`<div class="muted" style="margin-top:6px">Régularité : ${MD.reg}</div>`:''}`}
 function midNote(m,ts){if(!MD||MD.fin)return;const st=MD.steps[MD.si],ev=st.ev[MD.ei];if(!ev)return;const p=pc(m);
  if(ev.p.length===1){
@@ -1258,10 +1257,50 @@ function midFinish(){const l=MD.l;MD.fin=true;const n=MD.steps.length;
  const base=MD.wrongTot<=n?3:MD.wrongTot<=3*n?2:1,stars=MD.skipped?Math.min(2,base):base;
  const rec=S.lessons[l.id]||{best:0,stars:0,plays:0},first=!rec.done;rec.plays++;rec.best=100;rec.stars=Math.max(rec.stars||0,stars);rec.done=true;S.lessons[l.id]=rec;
  const bonus=first?50:8;if(first)planNow().nw=1;else planNow().rev=1;S.xp+=bonus;award('first');award('kb1');checkUnits();save();view='result';
- const nx=LESSONS[LESSONS.indexOf(l)+1];
- app.innerHTML=`<div class="result stack"><span class="eyebrow">${tx(l.t)}</span><h1>Bien joué !</h1>${bigStars(stars)}<div class="statgrid" style="grid-template-columns:1fr 1fr"><div class="stat"><b>+${bonus}</b><span>XP</span></div><div class="stat"><b>${MD.wrongTot}</b><span>notes à côté</span></div></div>
+ const nx=l.song?null:LESSONS[LESSONS.indexOf(l)+1];
+ app.innerHTML=`<div class="result stack"><span class="eyebrow">${tx(l.t)}</span><h1>${l.song?'Chanson jouée !':'Bien joué !'}</h1>${bigStars(stars)}<div class="statgrid" style="grid-template-columns:1fr 1fr"><div class="stat"><b>+${bonus}</b><span>XP</span></div><div class="stat"><b>${MD.wrongTot}</b><span>notes à côté</span></div></div>
  ${nx?`<p class="card">Suite : <b>${tx(nx.t)}</b></p>`:''}<button class="btn" data-go="home">Continuer</button><button class="btn ghost" data-start-mid="${l.id}">Rejouer</button></div>`}
 async function midMetro(){audio();const st=MD.steps[MD.si],bt=60/(st.bpm||66),t=newBus();for(let i=0;i<4;i++)click(t+.1+i*bt,i===0,.3);MD.metro=true}
+
+/* ===================== CHANSONS ===================== */
+const PATN={plaque:'a2',bf:'a3',arp:'a4',arp8:'a5',bq:'a6'};
+const PATT={plaque:'accords plaqués',bf:'basse + accord',arp:'arpège 1‑3‑5‑3',arp8:'arpège 1‑3‑5‑8‑5‑3',bq:'basse – accord – quinte – accord'};
+const SONGS=[
+ {id:'tas',t:'Twist and Shout',a:'The Beatles',key:'D',lvl:1,pat:'plaque',need:['a2'],secs:[{n:'Refrain',ds:[1,4,5,4]}]},
+ {id:'bey',t:'Brown Eyed Girl',a:'Van Morrison',key:'G',lvl:1,pat:'plaque',need:['a2'],secs:[{n:'Couplet',ds:[1,4,1,5]}]},
+ {id:'sbm',t:'Stand by Me',a:'Ben E. King',key:'A',lvl:2,pat:'bf',need:['a3','2d'],secs:[{n:'Couplet',ds:[1,6,4,5]}]},
+ {id:'lib',t:'Let It Be',a:'The Beatles',key:'C',lvl:2,pat:'bf',need:['a3','3b'],secs:[{n:'Couplet',ds:[1,5,6,4]},{n:'Refrain',ds:[6,5,4,1]}]},
+ {id:'nwn',t:'No Woman, No Cry',a:'Bob Marley',key:'C',lvl:2,pat:'bf',need:['a3','3b'],secs:[{n:'Couplet',ds:[1,5,6,4]}]},
+ {id:'wwy',t:'With or Without You',a:'U2',key:'D',lvl:3,pat:'arp',need:['a4','3d'],secs:[{n:'Couplet',ds:[1,5,6,4]}]},
+ {id:'per',t:'Perfect',a:'Ed Sheeran',key:'G',lvl:3,pat:'arp8',need:['a5','3d'],secs:[{n:'Couplet',ds:[1,6,4,5]}]},
+ {id:'cr',t:'Take Me Home, Country Roads',a:'John Denver',key:'A',lvl:3,pat:'arp',need:['a7','3d'],secs:[{n:'Couplet',ds:[1,5,6,4]},{n:'Refrain',ds:[1,6,5,4]}]},
+ {id:'koh',t:"Knockin' on Heaven's Door",a:'Bob Dylan',key:'G',lvl:4,pat:'bq',need:['a6','3e'],secs:[{n:'Couplet',ds:[1,5,2]},{n:'Fin de phrase',ds:[1,5,4]}]},
+ {id:'sha',t:'Sweet Home Alabama',a:'Lynyrd Skynyrd',key:'D',lvl:4,pat:'bq',need:['a6','p3'],secs:[{n:'Couplet',ds:[1,8,4,1]}]}];
+const SLVL={1:['Niveau 1 · Accords plaqués','Trois accords, joués ensemble. Tu chantes par-dessus.'],2:['Niveau 2 · Basse et accord','La main gauche joue la basse, la droite l\'accord.'],3:['Niveau 3 · Arpèges','Les accords en arpège, comme dans la plupart des chansons.'],4:['Niveau 4 · Motifs et accords empruntés','Basse – accord – quinte – accord, et un accord rock.']};
+const patEv=(k,d,pat)=>{const nm=cNames(k,d),ch=()=>evChord(triM(k,d),chordName(k,d)),b=bassMidi(k,d);
+ if(pat==='plaque')return [ch()];if(pat==='bf')return [evNote(b,1,nm[0]),ch()];
+ if(pat==='arp')return arpEv(k,d,[0,1,2,1]);if(pat==='arp8')return arpEv(k,d,[0,1,2,3,2,1]);
+ return [evNote(b,1,nm[0]),ch(),evNote(b+7,5,fmt(NN[pc(b+7)])),ch()]};
+const songNeeds=sg=>sg.need.filter(id=>!passed(id));
+const songLesson=sg=>{if(sg.L)return sg.L;const bpm=sg.pat==='plaque'?60:70;
+ sg.L={id:'s_'+sg.id,song:sg,type:'mid',t:sg.t,
+  intro:`${sg.a}. Grille simplifiée, par accords, jouée en ${PATT[sg.pat]} (leçon « ${LBY[PATN[sg.pat]].t} »). Les grilles ${sg.secs.map(x=>x.ds.map(d=>ROM[d-1]).join('–')).join(' et ')} sont celles que tu as appris à reconnaître. Tonalité d'origine : ${keyName(chalKey(sg))}, change-la si tu veux.`,
+  hint:`Rejoue d'abord le motif seul (leçon « ${LBY[PATN[sg.pat]].t} »). Tu peux aussi chanter la chanson en jouant juste les basses. Quand tu es à l'aise, essaie « Jouer sans aide ».`,
+  build:k=>sg.secs.map(x=>({t:`${x.n} : ${x.ds.map(d=>ROM[d-1]).join(' – ')} en ${keyName(k)} (${x.ds.map(d=>chordName(k,d)).join(' – ')}).`,mem:`${x.n} : joue de mémoire la grille ${x.ds.map(d=>ROM[d-1]).join(' – ')} en ${keyName(k)}.`,ev:x.ds.flatMap(d=>patEv(k,d,sg.pat)),timed:true,bpm}))};
+ LBY[sg.L.id]=sg.L;return sg.L};
+function songsView(){
+ const done=SONGS.filter(g=>(S.lessons['s_'+g.id]||{}).done).length;
+ let h=`<div class="card stack" style="gap:8px"><div class="eyebrow">Chansons</div><h2>Joue de vraies chansons</h2><p class="muted small">Chaque chanson utilise les accords et le motif de tes leçons, et se débloque quand tu les as réussies. Grilles simplifiées, sans partition : tu joues les accords que tu as appris à reconnaître. ${done} / ${SONGS.length} jouées.</p><div id="midichip" class="mchip"></div><button class="btn ghost" data-act="prac">Pratiquer : un exercice au hasard, dans une autre tonalité</button></div>`;
+ [1,2,3,4].forEach(lv=>{h+=`<div class="stack" style="gap:8px"><div><div class="eyebrow">${SLVL[lv][0]}</div><p class="small muted">${SLVL[lv][1]}</p></div>`;
+  SONGS.filter(g=>g.lvl===lv).forEach(g=>{const miss=songNeeds(g),ok=S.free||!miss.length,st=(S.lessons['s_'+g.id]||{}).stars||0;
+   h+=`<div class="card stack" style="gap:6px"><div class="row" style="justify-content:space-between"><div><b>${g.t}</b><div class="small muted">${g.a} · ${keyName(chalKey(g))}</div></div>${starRow(st)}</div>
+   <div class="small">${g.secs.map(x=>`${x.n} : ${x.ds.map(d=>ROM[d-1]).join(' – ')}`).join(' · ')}</div>
+   <div class="small muted">Motif : ${PATT[g.pat]}</div>
+   ${ok?`<button class="btn" data-song="${g.id}">${st?'Rejouer':'Jouer'}</button>`:`<p class="small" style="color:var(--gold)">À débloquer : ${miss.map(id=>'« '+LBY[id].t+' »').join(', ')}</p>`}</div>`});
+  h+='</div>'});
+ return h}
+function startSong(id){const g=SONGS.find(x=>x.id===id);if(!g)return;if(!S.free&&songNeeds(g).length){toast('Réussis d\'abord : '+songNeeds(g).map(i=>LBY[i].t).join(', '));return}audio();midiInit();songLesson(g);startMid('s_'+g.id)}
+function startPrac(){const pool=LESSONS.filter(l=>l.type==='mid'&&passed(l.id));const l=pool.length?pool[Math.floor(Math.random()*pool.length)]:LBY.a2;audio();midiInit();startMid(l.id);MD.key=KEYS[Math.floor(Math.random()*KEYS.length)];midBuild();drawMid()}
 /* ===================== PROGRÈS ===================== */
 function renderProgress(){view='progress';const lv=level(),acc=S.stats.t?Math.round(S.stats.c/S.stats.t*100):0;
  const days=[...Array(7)].map((_,i)=>{const d=new Date();d.setDate(d.getDate()-6+i);return{k:dayKey(d),l:['D','L','M','M','J','V','S'][d.getDay()]}});const mx=Math.max(goalQ(),...days.map(d=>S.daily[d.k]||0));
@@ -1310,11 +1349,13 @@ function go(v){CK=KEYS[0];resetArm=false;if(v==='home')renderHome();else if(v===
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const ds=b.dataset;
  if(ds.go){go(ds.go);return}
  if(ds.trk){S.tr=ds.trk;save();renderHome.scrolled=false;renderHome();window.scrollTo(0,0);return}
+ if(ds.song){startSong(ds.song);window.scrollTo(0,0);return}
  if(ds.startMid){audio();startMid(ds.startMid);return}
  if(ds.mk!=null&&view==='mid'){MD.key=KEYS[+ds.mk];midBuild();drawMid();return}
  if(ds.mid&&view==='mid'){audio();const st=MD.steps[MD.si];
   if(ds.mid==='demo'){const seq=st.ev.map(e=>e.hl.map(x=>x.m));playSeqM(seq,st.timed?60/(st.bpm||66)*.8:.7)}
   else if(ds.mid==='met'){midMetro();drawMid()}
+  else if(ds.mid==='aid'){if(!MD.noaid){MD.noaid=true;MD.reveal=false}else MD.reveal=!MD.reveal;drawMid()}
   else if(ds.mid==='reset'){MD.wrong=0;MD.reg=null;midStepReset();drawMid()}
   else if(ds.mid==='skip'){MD.skipped++;MD.wrongTot+=MD.wrong;if(MD.si>=MD.steps.length-1){midFinish()}else{MD.si++;MD.wrong=0;midStepReset();MD.reg=null;drawMid()}}
   return}
@@ -1340,6 +1381,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
  if(act==='daily'){audio();renderPlan();window.scrollTo(0,0)}
  else if(act==='plan'){renderPlan();window.scrollTo(0,0)}
  else if(act==='chal'){openChal()}
+ else if(act==='prac'){startPrac();window.scrollTo(0,0)}
  else if(act==='chaldone'){chalDone()}
  else if(act==='lquit'){go('home')}
  else if(act==='lprev'){LN.p--;LN.si=0;drawLearn();window.scrollTo(0,0)}
