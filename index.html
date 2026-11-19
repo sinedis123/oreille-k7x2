@@ -1243,7 +1243,12 @@ if(S.onboarded)renderHome();else renderOnb();
 /* ===================== SAUVEGARDE SUR LE COMPTE ===================== */
 /* La progression est copiée dans la base privée du compte (db, data/users/<id>) : elle suit l'utilisateur d'un appareil à l'autre. Le plus récent gagne. */
 const SYNC={ref:null,t:null,busy:false,state:'local'};
-function syncMsg(){return SYNC.state==='ok'?'Ta progression est sauvegardée sur ton compte Claude : tu la retrouves sur ton iPhone comme sur ton Mac.':SYNC.state==='err'?"La sauvegarde sur ton compte n'a pas abouti. Ta progression reste sur cet appareil : réessaie plus tard.":'Ta progression est enregistrée sur cet appareil seulement (connecte-toi à Claude pour la sauvegarder sur ton compte).'}
+/* Synchro hors de Claude : Firebase (Firestore, accès REST), clé fixe, un seul utilisateur */
+const FBS={proj:'oreille-sync',key:'AIzaSyAp02wtDCEBV-QcFHVmv0bzFPYBUsWFn_A',doc:'cc36197e7c2b98601a4d9f64fc09c074'};
+function fbRef(){const url=`https://firestore.googleapis.com/v1/projects/${FBS.proj}/databases/(default)/documents/progress/${FBS.doc}?key=${FBS.key}`;
+ return {async get(){const r=await fetch(url);if(r.status===404)return {exists:false};if(!r.ok)throw new Error('fb '+r.status);const j=await r.json();const f=j.fields||{};return {exists:!!f.data,data:()=>JSON.parse(f.data.stringValue)}},
+  async set(o){const r=await fetch(url+'&updateMask.fieldPaths=data',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({fields:{data:{stringValue:JSON.stringify(o)}}})});if(!r.ok)throw new Error('fb '+r.status)}}}
+function syncMsg(){return SYNC.state==='ok'?(SYNC.fb?'Ta progression est sauvegardée en ligne : tu la retrouves sur tous tes appareils.':'Ta progression est sauvegardée sur ton compte Claude : tu la retrouves sur ton iPhone comme sur ton Mac.'):SYNC.state==='err'?"La sauvegarde en ligne n'a pas abouti. Ta progression reste sur cet appareil : réessaie plus tard.":'Ta progression est enregistrée sur cet appareil seulement (connecte-toi à Claude pour la sauvegarder sur ton compte).'}
 function syncUI(){const el=document.getElementById('syncmsg');if(el)el.textContent=syncMsg()}
 function syncPush(){if(!SYNC.ref)return;clearTimeout(SYNC.t);SYNC.t=setTimeout(async()=>{if(SYNC.busy){syncPush();return}SYNC.busy=true;try{await SYNC.ref.set(JSON.parse(JSON.stringify(S)));SYNC.state='ok'}catch(e){SYNC.state='err'}SYNC.busy=false;syncUI()},1500)}
 function applyRemote(r,restamp){S={...structuredClone(DEF),...r,stats:{...DEF.stats,...(r.stats||{})},streak:{...DEF.streak,...(r.streak||{})},rec:{deg:{},chd:{},...(r.rec||{})}};if(restamp)S.upd=Date.now();try{localStorage.setItem('oreillePop',JSON.stringify(S))}catch(e){}if(restamp)syncPush();
@@ -1252,9 +1257,8 @@ function applyRemote(r,restamp){S={...structuredClone(DEF),...r,stats:{...DEF.st
 async function syncPull(){try{const snap=await SYNC.ref.get();
  if(snap.exists&&(snap.data().upd||0)>(S.upd||0)){applyRemote(snap.data());SYNC.state='ok';syncUI();return}
  SYNC.state='ok';if(S.upd)syncPush();syncUI()}catch(e){SYNC.state='err';syncUI()}}
-async function syncInit(){try{if(!window.claude||!claude.use)return;const [db,user]=await Promise.all([claude.use('db'),claude.use('user')]);if(!db||!user)return;const id=await user.id();if(!id)return;
+async function syncInit(){try{if(!window.claude||!claude.use){SYNC.fb=true;SYNC.ref=fbRef();await syncPull();document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!['quiz','learn','kb'].includes(view))syncPull()});return}const [db,user]=await Promise.all([claude.use('db'),claude.use('user')]);if(!db||!user)return;const id=await user.id();if(!id)return;
  SYNC.ref=db.doc('data/users/'+id+'/progress');await syncPull();
  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!['quiz','learn','kb'].includes(view))syncPull()})}catch(e){}}
 syncInit();
 </script>
-</body></html>
