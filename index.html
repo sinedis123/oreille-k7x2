@@ -838,7 +838,7 @@ function renderQ(){view='quiz';const q=Q.qs[Q.i],k=q.key;CK=k;Q.input=[];Q.answe
  app.innerHTML=`<div class="quizwrap"><div class="qtop"><button class="xbtn" data-act="quit" aria-label="Quitter">${I.close}</button><div class="bar"><i style="width:${(Q.practice?(Q.i%10)/10:Q.i/Q.qs.length)*100}%"></i></div><span class="pill" style="color:var(--accent)">${I.flame}${Q.combo}</span></div>
  <div class="prompt"><span class="eyebrow">${q.src?q.src+' · ':''}${q.type==='qual'||q.type==='progid'||q.type==='rhy'?'':'Tonalité : '+keyName(k)}</span><h2>${prompts[q.type]}</h2></div>
  <button class="playbig" data-act="replay" aria-label="Réécouter">${I.play}</button>
- <div class="lbtns" style="justify-content:center">${q.type!=='qual'&&q.type!=='progid'&&q.type!=='rhy'?`<button class="lbtn" data-act="cad">${I.play}Cadence seule</button>`:''}${q.type==='deg'||q.type==='mel'?`<button class="lbtn" data-act="tonic">${I.play}Note maison (1)</button>`:''}</div>
+ <div class="lbtns" style="justify-content:center">${q.type!=='qual'&&q.type!=='progid'&&q.type!=='rhy'?`<button class="lbtn" data-act="cad">${I.play}Cadence seule</button>`:''}${q.type==='deg'||q.type==='mel'?`<button class="lbtn" data-act="tonic">${I.play}Note maison (1)</button>`:''}${['deg','mel','chord','prog'].includes(q.type)?`<button class="lbtn" data-act="solo">${I.play}${{deg:'Note seule',mel:'Mélodie seule',chord:'Accord seul',prog:'Grille seule'}[q.type]}</button>`:''}</div>
  ${seq?`<div class="slots">${q.ans.map((_,i)=>`<div class="slot" data-slot="${i}">${q.type==='prog'&&i===0&&q.lesson.len<4?'':''}</div>`).join('')}</div><div class="lbtns" style="justify-content:center;margin-top:8px"><button class="lbtn" data-act="undo">Effacer la dernière</button></div>`:''}
  ${ans}</div>`;
  setTimeout(()=>playQ(q),250)}
@@ -1471,6 +1471,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
  else if(act==='bkcopy'){const txt=JSON.stringify(S),el=document.getElementById('bk');el.value=txt;el.select();(navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(()=>toast('Sauvegarde copiée')).catch(()=>toast('Texte sélectionné : copie-le à la main'))}
  else if(act==='bkrestore'){try{const r=JSON.parse(document.getElementById('bk').value);if(!r||typeof r!=='object'||!r.lessons)throw 0;applyRemote(r,true);toast('Sauvegarde restaurée')}catch(e){toast('Sauvegarde invalide')}}
  else if(act==='replay'){playQ(Q.qs[Q.i])}
+ else if(act==='solo'){playQ(Q.qs[Q.i],false)}
  else if(act==='cad'){let t=newBus();cadence(Q.qs[Q.i].key,t)}
  else if(act==='tonic'){const t=newBus(),k=Q.qs[Q.i].key,tn=tonic(k),c=chordMidis(k,1),m=c.tri.find(x=>x%12===tn%12)||tn;tone(m,t,1.5,.7)}
  else if(act==='undo'){if(!Q.answered){Q.input.pop();updateSlots()}}
