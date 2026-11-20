@@ -54,6 +54,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .goalcard{background:linear-gradient(135deg,#2b2350,#1c1f38);border:1px solid var(--line)}
 .unit{margin-top:22px}
 .unithead{border-radius:18px;padding:14px 16px;color:#120f22}
+.recap{margin:8px 0 0;padding:10px 12px;border-radius:14px;background:var(--surface2);display:flex;gap:10px;align-items:center;justify-content:space-between;font-size:13px;line-height:1.4}.recap .lbtn{flex:none}
 .unithead .eyebrow{color:rgba(18,15,34,.7)}
 .unithead h3{font-size:19px;font-weight:800}
 .path{display:flex;flex-direction:column;align-items:center;gap:14px;padding:20px 0 4px}
@@ -629,11 +630,35 @@ Object.assign(WHY_A,{g1:["Connaître la forme de la gamme majeure sous tes doigt
  a13:["Comprendre comment inventer une mélodie sur une grille.","Improviser, c'est jouer ce que tu entends dans ta tête, en restant dans la tonalité."],
  a14:["Inventer 4 notes sur chaque accord d'une grille.","Tu joues à l'oreille ce qui sonne bien : c'est le but de tout le parcours."]});
 U.push(U_A);U.push(U_B);
+(()=>{const u4=U.find(u=>u.id==='u4'),pickL=ids=>u4.L.filter(l=>ids.includes(l.id));
+ const u4a={...u4,id:'u4a',L:pickL(['e1','4a','4b','4c'])},u4b={...u4,id:'u4b',title:'Mélodies plus longues',desc:"Des phrases plus longues, puis le début d'une vraie chanson, à l'oreille et au clavier.",L:pickL(['4d','4e','h1','h3'])};
+ U.push(u4a,u4b);
+ const order=['u0','u1','u4a','u2','u3','u4b','u5','up','um','u6','ur','ua','ub'],arr=order.map(id=>U.find(u=>u.id===id));
+ U.splice(0,U.length,...arr)})();
 const TRACK={ur:'acc',ua:'acc',ub:'acc'};
 U.forEach(u=>{u.track=TRACK[u.id]||'ear'});
 ['ear','acc'].forEach(t=>{let n=0;U.forEach(u=>{if(u.track===t)u.n=++n})});
 const LESSONS=[];U.forEach((u,ui)=>u.L.forEach(l=>{l.unit=ui;LESSONS.push(l)}));
 const LBY={};LESSONS.forEach(l=>{LBY[l.id]=l});
+/* ===================== RAPPELS ENTRE UNITÉS ===================== */
+const N=id=>U.find(u=>u.id===id).n;
+const RECAP={
+ u1:{t:()=>`Tu connais la gamme et les degrés (unité ${N('u0')}). Ici, tu reconnais chaque degré à l'oreille.`,d:k=>playSeqM([1,2,3,4,5,6,7,8].map(d=>degMidi(k,d)),.3)},
+ u4a:{t:()=>`Tu reconnais les notes 1, 2, 3 et 5 (unité ${N('u1')}). Une mélodie, c'est ces notes à la suite.`,d:k=>playSeqM([1,2,3,5,3,2,1].map(d=>degMidi(k,d)),.45)},
+ u2:{t:()=>`Une mélodie, ce sont des notes à la suite (unité ${N('u4a')}). Un accord, ce sont des notes jouées ensemble : le I est fait du 1, du 3 et du 5 de l'unité ${N('u1')}.`,d:k=>{const t=chordMidis(k,1).tri;playSeqM([t[0],t[1],t[2],t],.6)}},
+ u3:{t:()=>`Tu connais les accords I, IV, V et vi (unité ${N('u2')}). Une grille, c'est ces accords à la suite, comme les notes d'une mélodie.`,d:k=>playSeqM([1,5,6,4].map(d=>chordMidis(k,d).tri),1)},
+ u4b:{t:()=>`Tu retrouves 3 ou 4 notes (unité ${N('u4a')}) et tu suis une grille (unité ${N('u3')}). Ici : des phrases plus longues, puis le début d'une vraie chanson.`,d:k=>playSeqM([1,2,3,4,5,4,3,2,1].map(d=>degMidi(k,d)),.35)},
+ u5:{t:()=>`Jusqu'ici tu as surtout joué en Do. Les degrés et les accords ne changent pas : seule la maison bouge.`,d:k=>{playSeqM([1,3,5,3,1].map(d=>degMidi(k,d)),.35);setTimeout(()=>playSeqM([1,3,5,3,1].map(d=>degMidi(KEYS[1],d)),.35),2400)}},
+ up:{t:()=>`Tu connais I, IV, V et vi (unité ${N('u2')}). Le ♭VII est un accord « emprunté », très courant dans le rock.`,d:k=>playSeqM([1,8,4,1].map(d=>chordMidis(k,d).tri),1)},
+ um:{t:()=>`Tu connais les degrés et les accords du majeur. Le mineur utilise les mêmes touches avec une autre maison : le vi devient le i.`,d:k=>playSeqM([1,4,5,1].map(d=>chordMidis(MKEYS[0],d).tri),1)},
+ u6:{t:()=>`Tout ensemble : notes, mélodies, accords, grilles, mineur. C'est le niveau d'une vraie chanson pop.`,d:k=>playSeqM([1,5,6,4].map(d=>chordMidis(k,d).tri),1)},
+ ur:{t:()=>`Tu connais les accords de la pop (unité ${N('u2')}). Pour les jouer, il faut un rythme : ici, tu apprends à le tenir.`,d:k=>{audio();const t=newBus();for(let i=0;i<8;i++)click(t+.1+i*.5,i%4===0,.3)}},
+ ua:{t:()=>`Tu connais les accords et le rythme. Ici, tu les joues avec les deux mains : plaqués, avec la basse, puis en arpège.`,d:k=>playSeqM([1,5,6,4].map(d=>[bassMidi(k,d),...chordMidis(k,d).tri]),1)},
+ ub:{t:()=>`Tu joues déjà des grilles en arpège. Ici : passer d'un accord à l'autre sans sauter, jouer en mineur, puis improviser.`,d:k=>playSeqM(voiceChain(k,[1,5,6,4]).map(x=>x.v),1)}};
+function recapHTML(u){const r=RECAP[u.id];if(!r||!(S.free||unlocked(LESSONS.indexOf(u.L[0]))))return '';return `<div class="recap"><span>↩ ${r.t()}</span><button class="lbtn" data-recap="${u.id}">${I.play}Écouter</button></div>`}
+const EARL={g1:'b2',a2:'2d',a3:'2d',a4:'c1',a5:'c1',a6:'2c',a7:'3d',a9:'c2',a10:'3d',a11:'m0',a12:'m3',a13:'e1',a14:'e1'};
+Object.entries(EARL).forEach(([a,b])=>{if(LBY[a])LBY[a].ear=b});
+
 const TXT={
  '1a':{i:`Chaque question commence par 4 accords : la <b>cadence</b>. Elle installe la tonalité et finit sur la <b>maison</b>. Ensuite, une note sonne.<br><br><b>Méthode :</b> (1) chante dans ta tête la dernière note de la cadence : c'est le 1. (2) Écoute la note mystère. (3) Compare : sonne-t-elle comme la maison, posée, finie ? C'est le 1. Sonne-t-elle plus haute et plus ouverte, mais tu pourrais t'y arrêter ? C'est le 5.<br><br>La tonalité change à chaque question : tu ne peux pas retenir un son, seulement la place de la note par rapport à la maison.`,t:`Si tu hésites, chante la gamme depuis la maison : 1 – 2 – 3 – 4 – 5. Le 5 est la 5e note, tout en haut de l'accord de la maison.`},
  '1b':{i:`1, 3 et 5 sont les trois notes de l'accord de la maison : ce sont les notes <b>stables</b>, celles sur lesquelles on peut s'arrêter.<br><br><b>Méthode :</b> d'abord, la note est-elle posée ? Oui : c'est 1, 3 ou 5. Pour trancher : le 1 est la maison (aucune envie de bouger), le 3 est lumineux, un peu « joyeux », le 5 est plus haut et plus ouvert.`,t:`Chante 1 – 2 – 3 – 4 – 5 depuis la maison : le 3 est la 3e note de la gamme, le 5 la 5e. Place la note mystère sur cette échelle.`},
@@ -693,10 +718,11 @@ const goalQ=()=>S.minutes*4;
 const todayCount=()=>S.daily[dayKey()]||0;
 function streakNow(){const l=S.streak.last;return (l===dayKey()||l===yesterday())?S.streak.n:0}
 function passed(id){const r=S.lessons[id];if(!r)return false;const l=LBY[id];return (l&&(l.type==='learn'||l.type==='kb'||l.type==='mid'))?!!r.done:(r.best||0)>=80}
-function unlocked(i){if(S.free||i===0)return true;const tr=U[LESSONS[i].unit].track;let j=i-1;while(j>=0&&U[LESSONS[j].unit].track!==tr)j--;if(j<0)return tr==='acc'?passed('3d'):true;const p=LESSONS[j];return passed(p.id)||((p.type==='kb'||p.opt)&&unlocked(j))}
+function unlocked(i){if(S.free||i===0)return true;const tr=U[LESSONS[i].unit].track;let j=i-1;while(j>=0&&U[LESSONS[j].unit].track!==tr)j--;if(j<0)return tr==='acc'?passed('2d'):true;const p=LESSONS[j];return passed(p.id)||((p.type==='kb'||p.opt)&&unlocked(j))}
 function unitDone(ui){return U[ui].L.filter(l=>l.type!=='kb'&&!l.opt).every(l=>passed(l.id))}
 function checkUnits(){U.forEach((u,ui)=>{if(unitDone(ui))award('u_'+u.id)})}
-function rankIdx(){let n=0;for(let i=0;i<U.length;i++){if(unitDone(i))n=i+1;else break}return n}
+const EUI=()=>U.map((u,i)=>i).filter(i=>U[i].track==='ear');
+function rankIdx(){let n=0;const e=EUI();for(let i=0;i<e.length;i++){if(unitDone(e[i]))n=i+1;else break}return n}
 function level(){let x=S.xp,l=1,need=100;while(x>=need){x-=need;l++;need=100+(l-1)*60}return{l,cur:x,need}}
 
 /* ===================== NOMS ===================== */
@@ -785,15 +811,15 @@ function ring(v,max){const p=Math.min(1,v/max),r=34,c=2*Math.PI*r;return `<svg c
 function starRow(n,size=''){return `<span class="stars">${[0,1,2].map(i=>I.star(i<n?'var(--gold)':'var(--surface2)')).join('')}</span>`}
 
 function trackSel(tr){return `<div class="seg" role="group" aria-label="Parcours"><button data-trk="ear" aria-pressed="${tr==='ear'}">Oreille</button><button data-trk="acc" aria-pressed="${tr==='acc'}">Accompagner</button><button data-trk="song" aria-pressed="${tr==='song'}">Chansons</button></div>`}
-function accTop(){const lock=!S.free&&!passed('3d');
- return `<div class="card stack" style="gap:8px"><div class="eyebrow">Parcours Accompagner</div><h2>Jouer les accords avec tes deux mains</h2><p class="muted small">Rythme, accords plaqués, basse, arpèges, puis grille complète. Les leçons « Avec ton clavier » écoutent ton clavier MIDI et vérifient tes notes. Sans clavier branché, joue sur le clavier à l'écran.</p><div id="midichip" class="mchip"></div>${lock?`<p class="small" style="color:var(--gold)">Termine d'abord l'unité 4 du parcours Oreille (enchaînements d'accords) pour débloquer ces leçons. Tu peux aussi activer le mode libre dans les réglages.</p>`:''}</div>${chalCard()}`}
+function accTop(){const lock=!S.free&&!passed('2d');
+ return `<div class="card stack" style="gap:8px"><div class="eyebrow">Parcours Accompagner</div><h2>Jouer les accords avec tes deux mains</h2><p class="muted small">Rythme, accords plaqués, basse, arpèges, puis grille complète. Les leçons « Avec ton clavier » écoutent ton clavier MIDI et vérifient tes notes. Sans clavier branché, joue sur le clavier à l'écran.</p><div id="midichip" class="mchip"></div>${lock?`<p class="small" style="color:var(--gold)">Termine d'abord la leçon « ${tx(LBY['2d'].t)} » (unité ${U[LBY['2d'].unit].n} du parcours Oreille) pour débloquer ces leçons. Tu peux aussi activer le mode libre dans les réglages.</p>`:''}</div>${chalCard()}`}
 function renderHome(){view='home';const tc=todayCount(),g=goalQ();
  const tr=S.tr||'ear',curIdx=LESSONS.findIndex((l,i)=>U[l.unit].track===tr&&unlocked(i)&&!passed(l.id)&&!l.opt);
  const offs=[0,48,72,48,0,-48,-72,-48];
  let html=topbar()+`<div class="stack">${trackSel(tr)}${tr==='acc'?accTop():tr==='song'?songsView():''}
- <div class="card daily"${tr!=='ear'?' hidden':''}>${ring(tc,g)}<div class="stack" style="gap:8px"><div><div class="eyebrow">Objectif du jour · ${S.minutes} min</div><h3>${tc>=g?'Objectif atteint, bravo !':`${tc} / ${g} réponses`}</h3></div><button class="btn" data-act="daily">Séance du jour</button></div></div>
- <div class="card goalcard stack"${tr!=='ear'?' hidden':''} style="gap:8px"><div class="eyebrow">Objectif final</div><h2>${RANKS[Math.min(U.length,RANKS.length-1)]}</h2><p class="muted small">Retrouver la mélodie et les accords d'une chanson pop simple, dans n'importe quelle tonalité, pour la jouer et t'accompagner au chant. Tu y arrives avec la théorie (Comprendre), l'oreille et des défis au clavier.</p><div class="row small"><span class="muted">${LESSONS.filter(l=>passed(l.id)).length} / ${LESSONS.length} leçons réussies</span></div></div></div>`;
- U.forEach((u,ui)=>{if(u.track!==tr)return;html+=`<section class="unit"><div class="unithead" style="background:${u.col}"><div class="eyebrow">Unité ${u.n} · ${u.goal}</div><h3>${u.title}</h3><p class="small" style="color:rgba(18,15,34,.8)">${u.desc}</p></div><div class="path">`;
+ <div class="card daily">${ring(tc,g)}<div class="stack" style="gap:8px"><div><div class="eyebrow">Objectif du jour · ${S.minutes} min</div><h3>${tc>=g?'Objectif atteint, bravo !':`${tc} / ${g} réponses`}</h3></div><button class="btn" data-act="daily">Séance du jour</button></div></div>
+ <div class="card goalcard stack"${tr!=='ear'?' hidden':''} style="gap:8px"><div class="eyebrow">Objectif final</div><h2>${RANKS[EUI().length]}</h2><p class="muted small">Retrouver la mélodie et les accords d'une chanson pop simple, dans n'importe quelle tonalité, pour la jouer et t'accompagner au chant. Tu y arrives avec la théorie (Comprendre), l'oreille et des défis au clavier.</p><div class="row small"><span class="muted">${LESSONS.filter(l=>passed(l.id)).length} / ${LESSONS.length} leçons réussies</span></div></div></div>`;
+ U.forEach((u,ui)=>{if(u.track!==tr)return;html+=`<section class="unit"><div class="unithead" style="background:${u.col}"><div class="eyebrow">Unité ${u.n} · ${u.goal}</div><h3>${u.title}</h3><p class="small" style="color:rgba(18,15,34,.8)">${u.desc}</p></div>${recapHTML(u)}<div class="path">`;
   u.L.forEach((l,li)=>{const gi=LESSONS.indexOf(l),un=unlocked(gi),st=S.lessons[l.id]?.stars||0,isCur=gi===curIdx,fin=l.type==='mix';
    html+=`<div class="node ${fin?'final':''}" style="transform:translateX(${offs[gi%8]}px)"><button class="bubble ${un?'':'locked'} ${isCur?'current':''}" style="background:${fin?'var(--gold)':u.col}" data-lesson="${l.id}" aria-label="${l.t}${un?'':' (verrouillée)'}">${un?(fin?I.crown:l.type==='learn'?I.book:l.type==='kb'||l.type==='mid'?I.keys:(li+1)):I.lock}</button>${starRow(st)}${l.type==='mid'?'<span class="tag">Avec ton clavier</span>':l.opt?'<span class="tag">Facultatif</span>':l.type==='learn'?'<span class="tag">Comprendre</span>':l.type==='kb'?'<span class="tag">Au clavier</span>':l.type==='mid'?'<span class="tag">Avec ton clavier</span>':''}<span class="lt ${un?'':'muted'}">${tx(l.t)}</span></div>`});
   html+=`</div></section>`});
@@ -918,7 +944,7 @@ function next(){Q.i++;if(Q.practice){Q.qs.push(practiceGen(Q.practice));renderQ(
 function finish(){const pct=Math.round(Q.ok/Q.qs.length*100),pass=pct>=80;let stars=pct===100?3:pct>=90?2:pct>=70?1:0;let bonus=0,msg='';
  if(Q.lesson){const id=Q.lesson.id,rec=S.lessons[id]||{best:0,stars:0,plays:0};const wasPassed=rec.best>=80;rec.plays++;rec.best=Math.max(rec.best,pct);rec.stars=Math.max(rec.stars,stars);S.lessons[id]=rec;if(pct>=80&&!wasPassed)planNow().nw=1;
   award('first');if(pct===100){award('perfect');bonus+=30}if(pass){bonus+=20;
-   if(!wasPassed){const gi=LESSONS.indexOf(Q.lesson);const nx=LESSONS[gi+1];msg=nx?`Leçon suivante débloquée : <b>${tx(nx.t)}</b>`:`Tu as atteint l'objectif final : <b>${RANKS[Math.min(U.length,RANKS.length-1)]}</b> !`}}
+   if(!wasPassed){const gi=LESSONS.indexOf(Q.lesson);const nx=LESSONS[gi+1];msg=nx?`Leçon suivante débloquée : <b>${tx(nx.t)}</b>`:`Tu as atteint l'objectif final : <b>${RANKS[EUI().length]}</b> !`}}
   else msg=`Il faut 80 % pour débloquer la suite. Tu y es presque : réessaie, c'est en répétant que l'oreille se forme.`;
   checkUnits()}
  else{msg='Séance du jour terminée. Reviens demain pour garder ta série.';stars=Math.max(stars,0)}
@@ -1048,7 +1074,7 @@ function renderTrain(){view='train';CK=KEYS[0];const w=weakList(),hasW=w.deg.len
 /* ===================== COACH : MAÎTRISE, RÉVISION, SÉANCE DU JOUR ===================== */
 const REVMAP={qual:'c1',chord:'c2',prog:'d1',progid:'d1',mel:'e1'};
 const revFor=l=>l.type==='rhy'?'r1':l.minor?'m0':(l.set&&l.set.some(d=>d>7))?'p1':l.keys?'f1':(REVMAP[l.type]||(l.set&&l.set.some(d=>[2,4,6,7].includes(d))?'e1':'b3'));
-function planNow(){const d=dayKey();if(!S.plan||S.plan.d!==d)S.plan={d,rev:0,tr:0,nw:0};return S.plan}
+function planNow(){const d=dayKey();if(!S.plan||S.plan.d!==d)S.plan={d,rev:0,tr:0,nw:0,kb:0};return S.plan}
 function mastery(id){const a=S.mast[id]||[],n=a.length;return {n,p:n?Math.round(a.reduce((x,y)=>x+y,0)/n*100):null}}
 function mLevel(id){const m=mastery(id);
  if(m.n<8)return {k:'new',t:'À découvrir',c:'var(--muted)',p:m.p||0};
@@ -1079,11 +1105,16 @@ function renderPlan(){view='plan';const p=planNow(),w=weakList(),rv=reviewTarget
  const steps=[];
  if(rv)steps.push({done:!!p.rev,t:`Réviser : « ${LBY[rv.id].t} »`,d:`Tu rates souvent ${rv.why}. Un rappel de 2 minutes avant de t'entraîner.`,m:rmin,b:`<button class="btn ghost" data-lesson="${rv.id}">Relire le cours</button>`});
  if(un.length)steps.push({done:p.tr>=target,t:hasW?'S\'entraîner sur mes points faibles':'S\'entraîner (dosé selon ma maîtrise)',d:`${Math.min(p.tr,target)} / ${target} réponses.${hasW?' Les notes et accords fragiles reviennent plus souvent.':' Plus de questions sur ce qui est fragile ou en progrès.'}`,m:tmin,b:`<button class="btn" data-pk="${hasW?'weak':'all'}">${p.tr>0&&p.tr<target?'Continuer':'Commencer'}</button>`});
+ const ai=LESSONS.findIndex((l,i)=>U[l.unit].track==='acc'&&unlocked(i)&&!passed(l.id)&&!l.opt),nxa=ai>=0?LESSONS[ai]:null,kbl=nxa||LESSONS.find((l,i)=>U[l.unit].track==='ear'&&l.type==='kb'&&unlocked(i)&&!passed(l.id)),hasPrac=LESSONS.some(l=>l.type==='mid'&&passed(l.id));
+ if(kbl)steps.push({done:!!p.kb,t:`Au clavier : ${tx(kbl.t)}`,d:kbl.type==='mid'?'Un exercice à jouer sur ton clavier : le MIDI vérifie tes notes.':kbl.type==='learn'?'Une leçon sur la façon de jouer.':'Un défi à faire sur ton clavier.',m:10,b:`<button class="btn" data-lesson="${kbl.id}">Ouvrir la leçon</button>`});
+ else if(hasPrac)steps.push({done:!!p.kb,t:'Au clavier : pratiquer',d:'Un exercice déjà réussi, dans une autre tonalité.',m:10,b:`<button class="btn" data-act="prac">Commencer</button>`});
+ const sg=SONGS.find(g=>!(S.lessons['s_'+g.id]||{}).done&&(S.free||!songNeeds(g).length));
+ if(sg)steps.push({done:false,opt:1,t:`Une chanson : ${sg.t}`,d:'Pour le plaisir de jouer une vraie chanson, avec les accords que tu connais.',m:10,b:`<button class="btn ghost" data-song="${sg.id}">Jouer</button>`});
  if(nx)steps.push({done:!!p.nw,t:`Avancer : ${tx(nx.t)}`,d:nx.type==='learn'?'Une nouvelle leçon de théorie.':nx.type==='kb'?'Un défi à faire sur ton clavier.':'La prochaine leçon d\'oreille du parcours.',m:nmin,b:`<button class="btn ghost" data-lesson="${nx.id}">Ouvrir la leçon</button>`});
  const cu=chalCur();if(cu)steps.push({done:cu.done,opt:1,t:`Défi de la semaine : ${cu.c.song}`,d:cu.done?'Déjà fait cette semaine : tu peux le rejouer.':'Une vraie chanson à jouer au clavier, facultatif.',m:10,b:`<button class="btn ghost" data-act="chal">${cu.done?'Le revoir':'Relever le défi'}</button>`});
  const all=steps.filter(s=>!s.opt).length&&steps.filter(s=>!s.opt).every(s=>s.done);
  app.innerHTML=topbar()+`<div class="stack"><div class="row" style="justify-content:space-between"><h2>Ta séance du jour</h2><button class="lbtn" data-go="home">Parcours</button></div>
- <div class="card stack" style="gap:8px"><div class="eyebrow">Le coach a regardé tes réponses</div><p>${diag}</p><p class="small muted">Objectif : ${S.minutes} min environ. Fais les étapes dans l'ordre, ou celles que tu veux.</p></div>
+ <div class="card stack" style="gap:8px"><div class="eyebrow">Le coach a regardé tes réponses</div><p>${diag}</p><p class="small muted">Objectif : ${S.minutes} min environ. L'oreille seule ne suffit pas : la séance garde toujours une étape au clavier. Fais les étapes dans l'ordre, ou celles que tu veux.</p></div>
  ${steps.map((s,i)=>`<div class="card step"><span class="stepn ${s.done?'done':''}">${s.done?'✓':i+1}</span><div class="stack" style="gap:8px"><div><h3>${s.t}</h3><p class="small muted">${s.d} ≈ ${s.m} min</p></div>${s.b}</div></div>`).join('')}
  ${all?`<div class="card"><b>Séance terminée.</b> Tu peux t'arrêter là, ou t'entraîner encore dans l'onglet Entraîner.</div>`:''}</div>`+tabs('home')}
 function progressExtra(){
@@ -1096,7 +1127,7 @@ function progressExtra(){
  const un=earUnlocked(),ms=un.map(l=>mastery(l.id)).filter(m=>m.n>=8),glob=ms.length?Math.round(ms.reduce((a,m)=>a+m.p,0)/ms.length):null;
  const byU=U.map((u,ui)=>({u,ui,ls:un.filter(l=>l.unit===ui)})).filter(x=>x.ls.length);
  return `<div class="card stack" style="gap:10px"><div class="row" style="justify-content:space-between"><h3>Évolution</h3><span class="pill">Maîtrise ${glob==null?'–':glob+' %'}</span></div><p class="small">${trend}</p><div class="week w14">${bars}</div><p class="small muted">Hauteur : nombre de réponses. Chiffre : réussite du jour, en orange dès 85 %.</p></div>
- <div class="card stack" style="gap:12px"><h3>Maîtrise par leçon</h3><p class="small muted">Calculée sur tes 20 dernières réponses à chaque leçon, leçon ou entraînement confondus.</p>${byU.length?byU.map(x=>`<div class="stack" style="gap:8px"><div class="eyebrow">Unité ${x.ui+1} · ${x.u.title}</div>${x.ls.map(l=>`<div class="stack" style="gap:4px"><div class="row" style="justify-content:space-between"><span class="small">${l.t}</span>${mLabel(l.id)}</div>${mBar(l.id)}</div>`).join('')}</div>`).join(''):'<p class="small muted">Apparaît dès ta première leçon d\'oreille.</p>'}</div>`}
+ <div class="card stack" style="gap:12px"><h3>Maîtrise par leçon</h3><p class="small muted">Calculée sur tes 20 dernières réponses à chaque leçon, leçon ou entraînement confondus.</p>${byU.length?byU.map(x=>`<div class="stack" style="gap:8px"><div class="eyebrow">${x.u.track==='acc'?'Accompagner · ':''}Unité ${x.u.n} · ${x.u.title}</div>${x.ls.map(l=>`<div class="stack" style="gap:4px"><div class="row" style="justify-content:space-between"><span class="small">${l.t}</span>${mLabel(l.id)}</div>${mBar(l.id)}</div>`).join('')}</div>`).join(''):'<p class="small muted">Apparaît dès ta première leçon d\'oreille.</p>'}</div>`}
 function recPct(kind,d){const a=S.rec[kind][d];return a&&a.length>=2?Math.round(a.reduce((x,y)=>x+y,0)/a.length*100):null}
 
 /* ===================== RYTHME ===================== */
@@ -1298,7 +1329,7 @@ function drawMid(){view='mid';const l=MD.l,st=MD.steps[MD.si],u=U[l.unit]||{titl
  const ms=MD.steps.flatMap(s=>s.ev.flatMap(e=>e.hl.map(x=>x.m)));const from=Math.floor(Math.min(48,...ms)/12)*12,to=Math.max(72,...ms)+0;
  app.innerHTML=`<div class="qtop"><button class="xbtn" data-act="lquit" aria-label="Quitter">${I.close}</button><div class="bar"><i id="midbar" style="width:${MD.si/n*100}%"></i></div></div>
  <div class="stack learn"><div><span class="eyebrow">Avec ton clavier · ${tx(u.title)}</span><h1 style="font-size:26px;margin-top:4px">${tx(l.t)}</h1></div>
- ${MD.si===0&&MD.ei===0?`<p>${tx(l.intro)}</p>${whyHTML(l.id)}`:''}
+ ${MD.si===0&&MD.ei===0?`<p>${tx(l.intro)}</p>${l.ear&&LBY[l.ear]?`<p class="small muted">↩ Côté oreille : unité ${U[LBY[l.ear].unit].n}, leçon « ${tx(LBY[l.ear].t)} ».</p>`:''}${whyHTML(l.id)}`:''}
  <div class="opt sm" role="group" aria-label="Tonalité">${(l.keys||KEYS).map((x,i)=>`<button data-mk="${i}" aria-pressed="${x===MD.key}">${fmt(x.notes[0])}</button>`).join('')}</div>
  <div id="midichip" class="mchip"></div>
  <div class="card stack" style="gap:6px"><div class="eyebrow">Étape ${MD.si+1} / ${n}</div><p id="midtxt">${tx((MD.noaid||st.listen)&&!MD.reveal&&st.mem?st.mem:st.t)}</p><div id="midbox" class="small"></div></div>
@@ -1336,7 +1367,7 @@ function midStepDone(st){MD.wrongTot+=MD.wrong;
 function midFinish(){const l=MD.l;MD.fin=true;const n=MD.steps.length;
  const base=MD.wrongTot<=n?3:MD.wrongTot<=3*n?2:1,stars=MD.skipped?Math.min(2,base):base;
  const rec=S.lessons[l.id]||{best:0,stars:0,plays:0},first=!rec.done;rec.plays++;rec.best=100;rec.stars=Math.max(rec.stars||0,stars);rec.done=true;S.lessons[l.id]=rec;
- const bonus=first?50:8;if(first)planNow().nw=1;else planNow().rev=1;S.xp+=bonus;award('first');award('kb1');checkUnits();save();view='result';
+ const bonus=first?50:8;planNow().kb=1;S.xp+=bonus;award('first');award('kb1');checkUnits();save();view='result';
  const nx=l.song?null:LESSONS[LESSONS.indexOf(l)+1];
  app.innerHTML=`<div class="result stack"><span class="eyebrow">${tx(l.t)}</span><h1>${l.song?'Chanson jouée !':'Bien joué !'}</h1>${bigStars(stars)}<div class="statgrid" style="grid-template-columns:1fr 1fr"><div class="stat"><b>+${bonus}</b><span>XP</span></div><div class="stat"><b>${MD.wrongTot}</b><span>notes à côté</span></div></div>
  ${nx?`<p class="card">Suite : <b>${tx(nx.t)}</b></p>`:''}<button class="btn" data-go="home">Continuer</button><button class="btn ghost" data-start-mid="${l.id}">Rejouer</button></div>`}
@@ -1386,7 +1417,7 @@ function renderProgress(){view='progress';const lv=level(),acc=S.stats.t?Math.ro
  const days=[...Array(7)].map((_,i)=>{const d=new Date();d.setDate(d.getDate()-6+i);return{k:dayKey(d),l:['D','L','M','M','J','V','S'][d.getDay()]}});const mx=Math.max(goalQ(),...days.map(d=>S.daily[d.k]||0));
  const ri=rankIdx();
  app.innerHTML=topbar()+`<div class="stack">
- <div class="card stack" style="gap:10px"><div class="eyebrow">Ton rang · ${ri}/${U.length} unités</div><h2>${RANKS[ri]}</h2><div class="bar" style="flex:none"><i style="width:${ri/U.length*100}%;background:var(--gold)"></i></div><p class="small muted">${ri<U.length?`Prochain rang : ${RANKS[ri+1]}, en finissant l'unité ${ri+1} (${U[ri].title}).`:'Objectif atteint. Garde ton oreille en forme avec la séance du jour.'}</p></div>
+ <div class="card stack" style="gap:10px"><div class="eyebrow">Ton rang · ${ri}/${EUI().length} unités</div><h2>${RANKS[ri]}</h2><div class="bar" style="flex:none"><i style="width:${ri/EUI().length*100}%;background:var(--gold)"></i></div><p class="small muted">${ri<EUI().length?`Prochain rang : ${RANKS[ri+1]}, en finissant l'unité ${U[EUI()[ri]].n} (${U[EUI()[ri]].title}).`:'Objectif atteint. Garde ton oreille en forme avec la séance du jour.'}</p></div>
  <div class="card stack" style="gap:10px"><div class="row" style="justify-content:space-between"><h3>Niveau ${lv.l}</h3><span class="small muted">${lv.cur} / ${lv.need} XP</span></div><div class="bar" style="flex:none"><i style="width:${lv.cur/lv.need*100}%;background:var(--accent)"></i></div></div>
  <div class="statgrid"><div class="stat"><b>${streakNow()}</b><span>jours de série</span></div><div class="stat"><b>${S.stats.t}</b><span>réponses</span></div><div class="stat"><b>${acc} %</b><span>précision</span></div></div>
  <div class="card stack"><h3>7 derniers jours</h3><div class="week">${days.map(d=>{const v=S.daily[d.k]||0;return `<div><span style="font-variant-numeric:tabular-nums">${v||''}</span><i class="${v>=goalQ()?'on':''}" style="height:${Math.max(4,v/mx*80)}px"></i>${d.l}</div>`}).join('')}</div><p class="small muted">En orange : objectif atteint (${goalQ()} réponses).</p></div>
@@ -1427,6 +1458,7 @@ function go(v){CK=KEYS[0];resetArm=false;if(v==='home')renderHome();else if(v===
 
 /* ===================== ÉVÉNEMENTS ===================== */
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const ds=b.dataset;
+ if(ds.recap){audio();RECAP[ds.recap].d(KEYS[0]);return}
  if(ds.go){go(ds.go);return}
  if(ds.trk){S.tr=ds.trk;save();renderHome.scrolled=false;renderHome();window.scrollTo(0,0);return}
  if(ds.song){startSong(ds.song);window.scrollTo(0,0);return}
