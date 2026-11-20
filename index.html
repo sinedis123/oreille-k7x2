@@ -736,13 +736,20 @@ function playSeq(k,seq,kind){let t=newBus();t=cadence(k,t);seq.forEach((d,i)=>ki
 
 /* ===================== GÉNÉRATION ===================== */
 const pick=a=>a[Math.floor(Math.random()*a.length)];
-let lastAns=null,lastAns2=null;function pickAns(set){let a=pick(set);if(set.length>1&&a===lastAns&&a===lastAns2)a=pick(set.filter(x=>x!==a));lastAns2=lastAns;lastAns=a;return a}
+const BAGS={};
+function pickAns(set,st){const key=set.join(',')+(st===S.stats.chd?'c':'d');let bag=BAGS[key];
+ if(!bag||!bag.length){bag=[];set.forEach(x=>{const r=(st||{})[x];const err=r&&r.t>=3?1-r.c/r.t:0;const n=1+(err>=.5?2:err>=.3?1:0);for(let i=0;i<n;i++)bag.push(x)});
+  for(let i=bag.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[bag[i],bag[j]]=[bag[j],bag[i]]}
+  if(set.length>1&&bag[bag.length-1]===lastAns){const k=bag.findIndex(x=>x!==lastAns);if(k>=0)[bag[bag.length-1],bag[k]]=[bag[k],bag[bag.length-1]]}
+  BAGS[key]=bag}
+ const a=bag.pop();lastAns=a;return a}
+let lastAns=null;
 function keyFor(l){const K=l.minor?MKEYS:KEYS;if(l.keys==='notC')return pick(K.slice(1));if(l.keys==='all')return pick(K);return K[0]}
 function gen(l){
  if(l.type==='mix'){const pool=LESSONS.filter(x=>EAR(x)&&x.unit>=2&&x.type!=='rhy'&&!x.minor&&!(x.set||[]).some(d=>d>7));const src=pick(pool);const mq=gen({...src,keys:'all',id:l.id,t:l.t,src:src.t});mq.lid=src.id;return mq}
  const k=keyFor(l);const q={type:l.type,key:k,lesson:l,lid:l.id};
- if(l.type==='deg'){q.ans=pickAns(l.set);q.oct=l.wide?pick([-1,0,0]):0;q.opts=l.set}
- else if(l.type==='chord'){q.ans=pickAns(l.set);q.opts=l.set}
+ if(l.type==='deg'){q.ans=pickAns(l.set,S.stats.deg);q.oct=l.wide?pick([-1,0,0]):0;q.opts=l.set}
+ else if(l.type==='chord'){q.ans=pickAns(l.set,S.stats.chd);q.opts=l.set}
  else if(l.type==='qual'){q.min=Math.random()<.5;const r=52+Math.floor(Math.random()*10);q.chord={bass:r-12,tri:[r,r+(q.min?3:4),r+7]};q.ans=q.min}
  else if(l.type==='mel'){q.ans=genMel(l.set,l.len,l.step);q.opts=l.set}
  else if(l.type==='prog'){q.opts=l.set;if(l.len===4){let ok=(l.minor?PROG4M:PROG4).filter(p=>p.every(d=>l.set.includes(d)));const mx=Math.max(...l.set);if(mx>7){const w=ok.filter(p=>p.includes(mx));if(w.length)ok=w}q.ans=pick(ok).slice()}else{const s=[1];while(s.length<l.len){s.push(pick(l.set.filter(d=>d!==s[s.length-1])))}q.ans=s}}
